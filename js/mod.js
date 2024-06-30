@@ -1,13 +1,13 @@
 let modInfo = {
-	name: "The ??? Tree",
+	name: "The Infinity Tree",
 	id: "mymod",
 	author: "nobody",
-	pointsName: "points",
-	modFiles: ["layers.js", "tree.js"],
+	pointsName: "number",
+	modFiles: ["_1number.js", "_2infinity.js", "_2machines.js", "_3velocity.js", "tree.js"],
 
 	discordName: "",
 	discordLink: "",
-	initialStartPoints: new Decimal (10), // Used for hard resets and new players
+	initialStartPoints: new Decimal (0), // Used for hard resets and new players
 	offlineLimit: 1,  // In hours
 }
 
@@ -39,8 +39,7 @@ function canGenPoints(){
 
 // Calculate points/sec!
 function getPointGen() {
-	if(!canGenPoints())
-		return new Decimal(0)
+	if(!canGenPoints()) return new Decimal(0)
 
 	let gain = new Decimal(1)
 	return gain
@@ -56,7 +55,7 @@ var displayThings = [
 
 // Determines when the game "ends"
 function isEndgame() {
-	return player.points.gte(new Decimal("e280000000"))
+	return player.points.gte(new Decimal("ee10000"))
 }
 
 
