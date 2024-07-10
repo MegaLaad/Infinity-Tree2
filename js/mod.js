@@ -3,7 +3,11 @@ let modInfo = {
 	id: "mymod",
 	author: "nobody",
 	pointsName: "number",
-	modFiles: ["_1number.js", "_2infinity.js", "_2machines.js", "_3velocity.js", "tree.js"],
+	modFiles: ["_1number.js", 
+		"_2infinity.js", "_2machines.js", 
+		"_3velocity.js", "_3blackHole.js", "_3energy.js", 
+		"_4spaceFragment.js",
+		"tree.js"],
 
 	discordName: "",
 	discordLink: "",
@@ -55,7 +59,7 @@ var displayThings = [
 
 // Determines when the game "ends"
 function isEndgame() {
-	return player.points.gte(new Decimal("ee10000"))
+	return player.points.gte(new Decimal("10^^10"))
 }
 
 

@@ -1,3 +1,5 @@
+unlockInfinity = 0
+
 addLayer("i", {
     name: "infinity", // This is optional, only used in a few places, If absent it just uses the layer id.
     symbol: "I", // This appears on the layer's node. Default is the id with the first letter capitalized
@@ -9,24 +11,31 @@ addLayer("i", {
     }},
     color: "#FF00FF",
     branches: ['n'],
-    requires: new Decimal(1.79e308),
+    requires: new Decimal("1.79e308"),
     resource: "infinity", // Name of prestige currency
     baseResource: "number",                 // The name of the resource your prestige gain is based on.
     baseAmount() { return player.points },  // A function to return the current amount of baseResource.
     type: "normal", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
     exponent: 0.0003,
     effectDescription() { return "which are boosting number production by ^"+format(Decimal.min(player.i.points.add(1), new Decimal(100).times(upgradeEffect('m', 11))))+" / ^"+format(new Decimal(100).times(upgradeEffect('m', 11))) },
-    gainMult() { // Calculate the multiplier for main currency from bonuses
+    directMult() { // Calculate the multiplier for main currency from bonuses
         mult = new Decimal(1)
+        if (hasUpgrade('sf', 23)) mult = mult.times(1000)
+        if (hasUpgrade('sf', 22)) mult = mult.times(1e6)
+        if (hasUpgrade('sf', 33)) mult = mult.times(1e40)
+        if (hasUpgrade('sf', 43)) mult = mult.times("1e2000")
         if (hasUpgrade('i', 31)) mult = mult.times(upgradeEffect('i', 31))
-        if (player.v.pointsTest >= 1) mult = mult.times(Decimal.min((Decimal.pow(10, Decimal.pow(1.1, player.v.points))).times(player.v.pointsTest).add(new Decimal(1).sub(player.v.pointsTest)), 100000))
+        if (player.v.pointsTest >= 0) mult = mult.times(Decimal.min((Decimal.pow(10, Decimal.pow(1.1, player.v.points))).times(player.v.pointsTest).add(1), 100000))
+        if (inChallenge('bl', 12)) mult = new Decimal(1)
         return mult
     },
+
     gainExp() { // Calculate the exponent on main currency from bonuses
-        return new Decimal(1)
+        exp = new Decimal(1)
+        return exp
     },
     row: 1, // Row the layer is in on the tree (0 is the first row)
-    layerShown(){return true},
+    layerShown(){return unlockInfinity = 1},
 
     doReset(resettingLayer) {
         player.i.time = new Decimal(0);
@@ -40,13 +49,30 @@ addLayer("i", {
 
     update() {
         if (!hasUpgrade('i', 23)) player.i.time = new Decimal(0)
-        if (player.i.points < 20000 && hasMilestone('v', 3)) player.i.points = new Decimal(20000)
+            if (hasUpgrade('sf', 32)) {
+                if (!player.i.points.gte(new Decimal(1e300)) && hasMilestone('v', 3)) player.i.points = new Decimal("1e300")
+            } else {
+                if (!player.i.points.gte(new Decimal(20000)) && hasMilestone('v', 3)) player.i.points = new Decimal("20000")
+            }
         if (player.v.resetting = new Decimal(0)) {
             gain = Decimal.pow(1.1, Decimal.log10(player.i.points));
-            if (getBuyableAmount('v', 11 > 0)) gain = Decimal.pow(new Decimal(1).times(getBuyableAmount(v, 11).pow(3).add(1)), Decimal.log10(player.i.points))
+            if (getBuyableAmount('v', 11 > 0)) gain = Decimal.pow(new Decimal(1).times(getBuyableAmount('v', 11).pow(new Decimal(3).times(getBuyableAmount('e', 11).add(1)).times(getBuyableAmount('v', 21).add(1))).add(1)), Decimal.log10(player.i.points))
+            if (hasUpgrade('sf', 33)) gain = gain.times(1000)
+            if (!hasUpgrade('sf', 53) && (!isNaN(Decimal.log2(player.sf.points.add(1))) || !hasUpgrade('sf', 53))) {
+                if (hasUpgrade('v', 31)) gain = gain.pow(Decimal.pow(2, Decimal.floor(Decimal.log10(player.v.points))))
+            } else {
+                if (hasUpgrade('v', 31)) gain = gain.pow(Decimal.pow(new Decimal(2).add(Decimal.log2(player.sf.points.add(1))), Decimal.floor(Decimal.log10(player.v.points))))
+            }
+            if (hasUpgrade('bl', 11)) gain = gain.pow(Decimal.min(Decimal.log2(player.bl.points.add(2)), 10))
+            if (hasUpgrade('sf', 34)) gain = gain.pow(1.2)
+            if (hasUpgrade('sf', 53)) gain = gain.times(10)
             if (hasUpgrade('i', 23)) player.i.time = player.i.time.add(gain)
         } else {
             gain = new Decimal(0);
+        }
+
+        if (player.points >= 1e10) {
+            unlockInfinity = 1
         }
     },
 
@@ -86,7 +112,7 @@ addLayer("i", {
             content: [
                 "main-display",
                 ["display-text",
-                    function() { return 'Your infinities are generating '+format(player.i.time)+" time." }
+                    function() { return 'When online, your infinities are generating '+format(player.i.time)+" time." }
                 ], "blank",
                 "buyables"
             ],
@@ -130,17 +156,17 @@ addLayer("i", {
             title: "Infinity Machines I",
             description: "Increase infinity gain by machines and time.",
             cost: new Decimal(1e70),
-            effect() { return format(Decimal.pow(player.m.points, Decimal.log2(player.i.time.div(100))).times(1e10)) },
-            effectDisplay() { return this.effect()+'x' },
-            unlocked() { return getBuyableAmount('i', 11) >= 1 || hasMilestone('v', 4) }
+            effect() { return format(Decimal.min(Decimal.pow(player.m.points, Decimal.log2(player.i.time.div(100))).times(1e10).add(1), new Decimal("e3e7"))) },
+            effectDisplay() { return this.effect()+'x / e30,000,000x' },
+            unlocked() { return (getBuyableAmount('i', 11) >= 1 || hasMilestone('v', 4)) && !inChallenge('bl', 11) }
         },
         32: {
             title: "Infinity Machines II",
             description: "Increase machine gain by infinity and time.",
             cost: new Decimal(1e120),
-            effect() { return format(Decimal.pow(Decimal.log2(Decimal.log10(player.i.points).div(50)), Decimal.log2(Decimal.log2(player.i.time)))) },
-            effectDisplay() { return this.effect()+'x' },
-            unlocked() { return getBuyableAmount('i', 11) >= 2  || hasMilestone('v', 4) }
+            effect() { return format(Decimal.min(Decimal.pow(Decimal.log2(Decimal.log10(player.i.points).div(50)), Decimal.log2(Decimal.log2(player.i.time))), 1e10)) },
+            effectDisplay() { return this.effect()+'x / 1.00e10x' },
+            unlocked() { return (getBuyableAmount('i', 11) >= 2 || hasMilestone('v', 4)) && !inChallenge('bl', 11) }
         },
     },
 
@@ -159,6 +185,6 @@ addLayer("i", {
     },
 
     passiveGeneration() { return (hasUpgrade("i", 22))?1:0 },
-    autoPrestige() { return (player.i.auto && hasUpgrade("i", 13)) },
+    autoPrestige() { return (player.i.auto && hasUpgrade("i", 13)) || inChallenge('bl', 21) },
     autoUpgrade() {return hasMilestone('v', 2)}
 })
