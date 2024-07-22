@@ -8,6 +8,7 @@ addLayer("i", {
         unlocked: false,
 		points: new Decimal(0),
         time: new Decimal(0),
+        test: new Decimal(0),
     }},
     color: "#FF00FF",
     branches: ['n'],
@@ -25,8 +26,8 @@ addLayer("i", {
         if (hasUpgrade('sf', 33)) mult = mult.times(1e40)
         if (hasUpgrade('sf', 43)) mult = mult.times("1e2000")
         if (hasUpgrade('i', 31)) mult = mult.times(upgradeEffect('i', 31))
-        if (player.v.pointsTest >= 0) mult = mult.times(Decimal.min((Decimal.pow(10, Decimal.pow(1.1, player.v.points))).times(player.v.pointsTest).add(1), 100000))
-        if (inChallenge('bl', 12)) mult = new Decimal(1)
+        if (player.v.pointsTest >= 0) mult = mult.times(Decimal.min((Decimal.pow(10, Decimal.pow(1.1, player.v.points))).add(1), 100000))
+        if (inChallenge('bl', 12) || player.d.dilating) mult = new Decimal(1)
         return mult
     },
 
@@ -38,8 +39,8 @@ addLayer("i", {
     layerShown(){return unlockInfinity = 1},
 
     doReset(resettingLayer) {
-        player.i.time = new Decimal(0);
         let keep = [];
+        if (hasMilestone('d', 1)) keep.push("buyables");
 		if (layers[resettingLayer].row > this.row) layerDataReset(this.layer, keep);
 	},
 
@@ -47,25 +48,26 @@ addLayer("i", {
         {key: "i", description: "I: Reset for infinities", onPress(){if (canReset(this.layer)) doReset(this.layer)}},
     ],
 
+    softcapPower: 1,
+
     update() {
-        if (!hasUpgrade('i', 23)) player.i.time = new Decimal(0)
-            if (hasUpgrade('sf', 32)) {
-                if (!player.i.points.gte(new Decimal(1e300)) && hasMilestone('v', 3)) player.i.points = new Decimal("1e300")
-            } else {
-                if (!player.i.points.gte(new Decimal(20000)) && hasMilestone('v', 3)) player.i.points = new Decimal("20000")
-            }
+        if (hasUpgrade('sf', 32)) {
+            if (!player.i.points.gte(new Decimal(1e300)) && hasMilestone('v', 3)) player.i.points = new Decimal("1e300")
+        } else {
+            if (!player.i.points.gte(new Decimal(20000)) && hasMilestone('v', 3)) player.i.points = new Decimal("20000")
+        }
         if (player.v.resetting = new Decimal(0)) {
-            gain = Decimal.pow(1.1, Decimal.log10(player.i.points));
-            if (getBuyableAmount('v', 11 > 0)) gain = Decimal.pow(new Decimal(1).times(getBuyableAmount('v', 11).pow(new Decimal(3).times(getBuyableAmount('e', 11).add(1)).times(getBuyableAmount('v', 21).add(1))).add(1)), Decimal.log10(player.i.points))
+            gain = Decimal.pow(1.1, Decimal.log10(player.i.points.add(10)));
+            if (getBuyableAmount('v', 11 > 0)) gain = Decimal.pow(new Decimal(1).times(getBuyableAmount('v', 11).pow(new Decimal(3).times(getBuyableAmount('e', 11).add(1)).times(getBuyableAmount('v', 21).add(1))).add(1)), Decimal.log10(player.i.points.add(10)))
             if (hasUpgrade('sf', 33)) gain = gain.times(1000)
             if (!hasUpgrade('sf', 53) && (!isNaN(Decimal.log2(player.sf.points.add(1))) || !hasUpgrade('sf', 53))) {
-                if (hasUpgrade('v', 31)) gain = gain.pow(Decimal.pow(2, Decimal.floor(Decimal.log10(player.v.points))))
+                if (hasUpgrade('v', 31) && !player.d.dilating) gain = gain.pow(Decimal.pow(2, Decimal.floor(Decimal.log10(player.v.points.add(10)))))
             } else {
-                if (hasUpgrade('v', 31)) gain = gain.pow(Decimal.pow(new Decimal(2).add(Decimal.log2(player.sf.points.add(1))), Decimal.floor(Decimal.log10(player.v.points))))
+                if (hasUpgrade('v', 31) && !player.d.dilating) gain = gain.pow(Decimal.pow(new Decimal(2).add(Decimal.log2(player.sf.points.add(2))), Decimal.floor(Decimal.log10(player.v.points.add(10)))))
             }
             if (hasUpgrade('bl', 11)) gain = gain.pow(Decimal.min(Decimal.log2(player.bl.points.add(2)), 10))
             if (hasUpgrade('sf', 34)) gain = gain.pow(1.2)
-            if (hasUpgrade('sf', 53)) gain = gain.times(10)
+            if (hasUpgrade('sf', 53)) gain = gain.pow(10)
             if (hasUpgrade('i', 23)) player.i.time = player.i.time.add(gain)
         } else {
             gain = new Decimal(0);
@@ -96,6 +98,10 @@ addLayer("i", {
                 ["display-text",
                     function() { return '<b>Infinity Upgrades</b>' }, {"font-size": "32px", "color": "#FF00FF"}
                 ], "blank",
+                ["toggle", ["i", "auto_upgrades"]],
+                ["display-text",
+                    function() { return '(Get a specific milestone to unlock the auto-buyer toggle above)' }
+                ],
                 "upgrades", "blank",
                 ["display-text",
                     function() { 
@@ -114,7 +120,8 @@ addLayer("i", {
                 ["display-text",
                     function() { return 'When online, your infinities are generating '+format(player.i.time)+" time." }
                 ], "blank",
-                "buyables"
+                ["buyable", "11"], "blank",
+                ["buyable", "21"]
             ],
             unlocked() {return hasUpgrade('i', 23)}
         },
@@ -156,16 +163,16 @@ addLayer("i", {
             title: "Infinity Machines I",
             description: "Increase infinity gain by machines and time.",
             cost: new Decimal(1e70),
-            effect() { return format(Decimal.min(Decimal.pow(player.m.points, Decimal.log2(player.i.time.div(100))).times(1e10).add(1), new Decimal("e3e7"))) },
-            effectDisplay() { return this.effect()+'x / e30,000,000x' },
+            effect() { return Decimal.min(Decimal.pow(player.m.points.add(1), Decimal.log2(player.i.time.div(100).add(2))).times(1e10).add(1), new Decimal("e3e7")) },
+            effectDisplay() { return format(this.effect())+'x / e30,000,000x' },
             unlocked() { return (getBuyableAmount('i', 11) >= 1 || hasMilestone('v', 4)) && !inChallenge('bl', 11) }
         },
         32: {
             title: "Infinity Machines II",
             description: "Increase machine gain by infinity and time.",
             cost: new Decimal(1e120),
-            effect() { return format(Decimal.min(Decimal.pow(Decimal.log2(Decimal.log10(player.i.points).div(50)), Decimal.log2(Decimal.log2(player.i.time))), 1e10)) },
-            effectDisplay() { return this.effect()+'x / 1.00e10x' },
+            effect() { return Decimal.min(Decimal.pow(Decimal.log2(Decimal.log10(player.i.points.add(10)).div(50).add(2)), Decimal.log2(Decimal.log2(player.i.time.add(2)).add(2))), 1e10) },
+            effectDisplay() { return format(this.effect())+'x / 1.00e10x' },
             unlocked() { return (getBuyableAmount('i', 11) >= 2 || hasMilestone('v', 4)) && !inChallenge('bl', 11) }
         },
     },
@@ -182,9 +189,20 @@ addLayer("i", {
             },
             purchaseLimit: 2,
         },
+        21: {
+            cost(x) { return Decimal.pow(10, Decimal.pow(10, Decimal.pow(10, Decimal.pow(10, getBuyableAmount('i', 21).add(1).pow(1.5).add(1.2))))) },
+            title: "Matter Explosion",
+            display() { return "Increase quarks gain by Infinity.<br><br>Cost: "+format(this.cost(getBuyableAmount(this.layer, this.id)))+" time<br>Bought: "+Decimal.floor(format(getBuyableAmount(this.layer, this.id)))+"/10" },
+            canAfford() { return player.i.time.gte(this.cost()) },
+            buy() {
+                setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+            },
+            purchaseLimit: 10,
+        },
+        unlocked() {return getBuyableAmount('s', 12).gte(1)}
     },
 
     passiveGeneration() { return (hasUpgrade("i", 22))?1:0 },
     autoPrestige() { return (player.i.auto && hasUpgrade("i", 13)) || inChallenge('bl', 21) },
-    autoUpgrade() {return hasMilestone('v', 2)}
+    autoUpgrade() {return player.i.auto_upgrades && hasMilestone('v', 2)}
 })

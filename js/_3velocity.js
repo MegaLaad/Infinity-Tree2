@@ -26,21 +26,21 @@ addLayer("v", {
                 if (hasUpgrade('v', 21)) {
                     if (getBuyableAmount('v', 12) > 0) {
                         if (hasUpgrade('sf', 42)) {
-                            return Decimal.floor(Decimal.log10(player.i.time.pow(5e-4)).times(Decimal.min(player.v.points.pow(2), 1e6)).times(Decimal.log10(player.i.time)))
+                            return Decimal.floor(Decimal.log10(player.i.time.pow(5e-4).add(10)).times(Decimal.min(player.v.points.pow(2), 1e6)).times(Decimal.log10(player.i.time.add(10)).add(2)))
                         } else {
-                            return Decimal.floor(Decimal.log10(player.i.time.pow(2.5e-5)).times(Decimal.min(player.v.points.pow(2), 1e6)).times(Decimal.log10(player.i.time)))
+                            return Decimal.floor(Decimal.log10(player.i.time.pow(2.5e-5).add(10)).times(Decimal.min(player.v.points.pow(2), 1e6)).times(Decimal.log10(player.i.time.add(10)).add(2)))
                         }
                     } else {
-                        return Decimal.floor(Decimal.log2(Decimal.log10(player.i.time).times(player.v.points.pow(2)).times(Decimal.log10(player.i.time))))
+                        return Decimal.floor(Decimal.log2(Decimal.log10(player.i.time.add(10)).times(player.v.points.pow(2)).times(Decimal.log10(player.i.time.add(10))).add(2)))
                     }
                 } else {
-                    return Decimal.floor(Decimal.log2(Decimal.log10(player.i.time).times(player.v.points.pow(2))))
+                    return Decimal.floor(Decimal.log2(Decimal.log10(player.i.time.add(10)).times(player.v.points.pow(2)).add(2)))
                 }
             } else {
-                return Decimal.floor(Decimal.log2(Decimal.log10(player.i.time)))
+                return Decimal.floor(Decimal.log2(Decimal.log10(player.i.time.add(10)).add(2)))
             } 
         } else {
-            return Decimal.floor(Decimal.ln(Decimal.log10(player.i.time)).div(Decimal.ln(12)))
+            return Decimal.floor(Decimal.ln(Decimal.log10(player.i.time.add(10)).add(12)).div(Decimal.ln(12)))
         }
     },
     getNextAt() {
@@ -49,12 +49,12 @@ addLayer("v", {
                 if (hasUpgrade('v', 21)) {
                     if (getBuyableAmount('v', 12) > 0) {
                         if (hasUpgrade('v', 42)) {
-                            return Decimal.pow(10, getResetGain(this.layer).add(1).div(Decimal.min(player.v.points.pow(2), 1e6)).div(Decimal.log10(player.i.time))).pow(2000)
+                            return Decimal.pow(10, getResetGain(this.layer).add(1).div(Decimal.min(player.v.points.pow(2), 1e6)).div(Decimal.log10(player.i.time.add(10)))).pow(2000)
                         } else {
-                            return Decimal.pow(10, getResetGain(this.layer).add(1).div(Decimal.min(player.v.points.pow(2), 1e6)).div(Decimal.log10(player.i.time))).pow(40000)
+                            return Decimal.pow(10, getResetGain(this.layer).add(1).div(Decimal.min(player.v.points.pow(2), 1e6)).div(Decimal.log10(player.i.time.add(10)))).pow(40000)
                         }
                     } else {
-                        return Decimal.pow(10, Decimal.pow(2, getResetGain(this.layer).add(1)).div(player.v.points.pow(2)).div(Decimal.log10(player.i.time)))
+                        return Decimal.pow(10, Decimal.pow(2, getResetGain(this.layer).add(1)).div(player.v.points.pow(2)).div(Decimal.log10(player.i.time.add(10))))
                     }
                 } else {
                     return Decimal.pow(10, Decimal.pow(2, getResetGain(this.layer).add(1)).div(player.v.points.pow(2)))
@@ -67,7 +67,7 @@ addLayer("v", {
         }
     },
     canReset() {
-        return getResetGain(this.layer) > 0 && player.i.time.gte(1e12)
+        return getResetGain(this.layer).gte(1) && player.i.time.gte(1e12)
     },
     prestigeButtonText() {
         if (getResetGain(this.layer) < 100) return "Reset for +"+format(getResetGain(this.layer))+" velocity<br><br>"+format(player.i.time)+" / "+format(getNextAt(this.layer))+" time"
@@ -94,6 +94,15 @@ addLayer("v", {
         if (player.v.best > 0) player.v.pointsTest = new Decimal(1)
 
         if (hasUpgrade('sf', 35) && player.v.resetGain.gte(1) && !isNaN(player.v.resetGain)) player.v.points = player.v.points.add(player.v.resetGain.times(0.001))
+        if (player.d.dilating) {
+            if (player.v.points.gte(new Decimal("ee10"))) {
+                if (hasUpgrade('sf', 41) && hasUpgrade('sf', 42) && hasUpgrade('sf', 43) && hasUpgrade('sf', 44) && hasUpgrade('sf', 45)) player.v.points = player.v.points.times(new Decimal("ee10"))
+            } else {
+                if (hasUpgrade('sf', 41) && hasUpgrade('sf', 42) && hasUpgrade('sf', 43) && hasUpgrade('sf', 44) && hasUpgrade('sf', 45)) player.v.points = player.v.points.pow(1.01)
+            }
+        } else {
+            if (hasUpgrade('sf', 41) && hasUpgrade('sf', 42) && hasUpgrade('sf', 43) && hasUpgrade('sf', 44) && hasUpgrade('sf', 45)) player.v.points = player.v.points.pow(1.01)
+        }
     },
 
     tabFormat: {
@@ -128,6 +137,9 @@ addLayer("v", {
                 "main-display",
                 ["display-text",
                     function() { return '<b>Time Enhancements</b>' }, {"font-size": "32px", "color": "#BBBB00"}
+                ], 
+                ["display-text",
+                    function() { return 'The \'Sell All\' button buys max of that buyable.' }
                 ], "blank",
                 "buyables", "blank",
             ],
@@ -138,12 +150,16 @@ addLayer("v", {
     doReset(resettingLayer) {
         player.v.resetGain = player.v.points.sub(lastPoints)
         lastPoints = player.v.points
-        player.i.time = new Decimal(0);
+        
 		let keep = [];
         if (hasUpgrade('sf', 53)) keep.push("milestones");
+        if (hasMilestone('sf', 1) && resettingLayer == 'sf') keep.push("buyables");
+        if (hasMilestone('sf', 2) && resettingLayer == 'sf') keep.push("upgrades");
+        if (hasMilestone('g', 2)) keep.push("buyables");
+        if (hasMilestone('g', 2)) keep.push("upgrades");
 		if (layers[resettingLayer].row > this.row)  {
             layerDataReset(this.layer, keep);
-            player.v.points = new Decimal(100)
+            if (hasUpgrade('sf', 53)) player.v.points = new Decimal(100)
             player.v.resetGain = new Decimal(0)
         }
 	},
@@ -177,6 +193,12 @@ addLayer("v", {
             requirementDescription: "15 velocities",
             effectDescription: "Keep infinity row 3 upgrades unlocked on all reset.",
             done() { return player.v.points.gte(15) || hasUpgrade('sf', 33) }
+        },
+        5: {
+            requirementDescription: "e1.000e20 velocities",
+            effectDescription: "Velocity and Energy doesn't reset anything.",
+            done() { return player.v.points.gte(new Decimal("ee20")) },
+            unlocked() {return hasUpgrade('sf', 53)}
         },
     },
 
@@ -231,6 +253,20 @@ addLayer("v", {
                 setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
             },
             purchaseLimit: 250,
+            sellAll() {
+                cost = decimalZero
+                if (getBuyableAmount('e', 11) < 100) {
+                    if (!hasChallenge('bl', 11)) cost = new Decimal(10).pow(getBuyableAmount(this.layer, 11).div(new Decimal(3)).add(1)).times(10).div(Decimal.pow(1e5, getBuyableAmount('e', 12)))
+                        else cost = new Decimal(10).pow(getBuyableAmount(this.layer, 11).div(new Decimal(4.5)).add(1)).times(10).div(Decimal.pow(1e5, getBuyableAmount('e', 12)))
+                } else {
+                    if (!hasChallenge('bl', 11)) cost = new Decimal(12).pow(getBuyableAmount(this.layer, 11).sub(new Decimal(99)).div(new Decimal(3)).add(1)).times(new Decimal(10).pow(new Decimal(100).div(new Decimal(3)).add(1))).times(10).div(Decimal.pow(1e5, getBuyableAmount('e', 12)))
+                        else cost = new Decimal(12).pow(getBuyableAmount(this.layer, 11).sub(new Decimal(99)).div(new Decimal(4.5)).add(1)).times(new Decimal(10).pow(new Decimal(100).div(new Decimal(4.5)).add(1))).times(10).div(Decimal.pow(1e5, getBuyableAmount('e', 12)))
+                }
+                while (player.v.points.gte(cost) && !getBuyableAmount(this.layer, this.id).gte(250)) {
+                    player.v.points = player.v.points.sub(cost)
+                    setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+                }
+            }
         },
         12: {
             cost(x) { return new Decimal(600) },
@@ -243,6 +279,12 @@ addLayer("v", {
             },
             unlocked() {return getBuyableAmount('v', 11) > 0},
             purchaseLimit: 1,
+            sellAll() {
+                while (player.v.points.gte(600) && !getBuyableAmount(this.layer, this.id).gte(1)) {
+                    player.v.points = player.v.points.sub(600)
+                    setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+                }
+            }
         },
         21: {
             cost(x) { 
@@ -261,8 +303,21 @@ addLayer("v", {
             },
             unlocked() {return getBuyableAmount('v', 12) > 0},
             purchaseLimit: 50,
+            sellAll() {
+                cost = decimalZero
+                if (getBuyableAmount('e', 11) < 15) {
+                    cost = new Decimal(10).pow(getBuyableAmount(this.layer, 21).times(new Decimal(1.5)).add(1)).times(10).div(Decimal.pow(1e5, getBuyableAmount('e', 12)))
+                } else {
+                    cost = new Decimal(20).pow(getBuyableAmount(this.layer, 21).sub(new Decimal(99)).times(new Decimal(1.5)).add(1)).times(new Decimal(10).pow(new Decimal(100).times(new Decimal(1.8)).add(1))).times(10).div(Decimal.pow(1e5, getBuyableAmount('e', 12)))
+                }
+                while (player.v.points.gte(cost) && !getBuyableAmount(this.layer, this.id).gte(50)) {
+                    player.v.points = player.v.points.sub(cost)
+                    setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+                }
+            }
         },
     },
 
     autoPrestige() { return (player.v.auto && hasUpgrade("sf", 32)) },
+    resetsNothing() { return hasMilestone("v", 5) },
 })

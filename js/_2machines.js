@@ -21,7 +21,8 @@ addLayer("m", {
         if (hasUpgrade('i', 32)) mult = mult.times(upgradeEffect('i', 32))
         if (player.v.pointsTest >= 1) mult = mult.times(Decimal.min((Decimal.pow(10, Decimal.pow(1.1, player.v.points))).times(player.v.pointsTest).add(new Decimal(1).sub(player.v.pointsTest)), 1e300))
         if (hasUpgrade('sf', 24)) mult = mult.times(7)
-        if (inChallenge('bl', 12)) mult = Decimal.log2(Decimal.log10(player.i.time))
+        if (inChallenge('bl', 12)) mult = Decimal.log2(Decimal.log10(player.i.time.add(10)).add(2))
+        if (player.d.dilating) mult = decimalOne
         return mult
     },
     gainExp() { // Calculate the exponent on main currency from bonuses
@@ -34,10 +35,14 @@ addLayer("m", {
         if (player.points >= new Decimal("1e320")) {
             unlockMachine = 1
         }
+
+        if (hasUpgrade('sf', 15) && hasUpgrade('sf', 25) && hasUpgrade('sf', 35) && hasUpgrade('sf', 45) && hasUpgrade('sf', 55)) {
+            player.m.points = player.m.points.add(Decimal.log10(player.sf.points.add(10)).div(10))
+        }
     },
 
     doReset(resettingLayer) {
-        player.i.time = new Decimal(0);
+        
 		let keep = [];
         if (hasMilestone('v', 1) && resettingLayer == 'v') keep.push("upgrades");
         if (hasMilestone('bl', 0)) keep.push("upgrades");
@@ -67,7 +72,7 @@ addLayer("m", {
             description: "Each machine increase infinity boost limit by x1.2. (There is a max)",
             cost: new Decimal(4),
             effect() {
-                if (hasUpgrade('m', 11)) return Decimal.min(Decimal.pow(1.2, player.m.points), new Decimal(10).times(Decimal.pow(new Decimal(1.5).times(getBuyableAmount('e', 11).div(4).add(1)), getBuyableAmount('v', 21))))
+                if (hasUpgrade('m', 11)) return Decimal.min(Decimal.pow(1.2, player.m.points), new Decimal(10).times(Decimal.pow(new Decimal(1.5).times(getBuyableAmount('e', 11).div(4).add(1)), getBuyableAmount('v', 21).add(1))))
                 else return 1
             },
         },

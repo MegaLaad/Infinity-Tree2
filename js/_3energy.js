@@ -18,33 +18,37 @@ addLayer("e", {
     baseAmount() { return player.i.time },  // A function to return the current amount of baseResource.
     type: "custom", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
     getResetGain() {
+        exp = decimalOne
+        if (player.d.dilating) exp = Decimal.log10(player.g.electron.pow(0.5))
         if (hasUpgrade('sf', 31)) {
             if (hasUpgrade('sf', 44)) {
                 mult = decimalOne
                 if (player.bl.points.sub(150) > 0) mult = player.bl.points.sub(150)
-                return Decimal.floor(Decimal.log10(player.i.time.pow(5e-2)).times(mult))
+                return Decimal.floor(Decimal.log10(player.i.time.pow(5e-2).add(10)).times(mult)).pow(exp)
             } else {
-                return Decimal.floor(Decimal.log10(player.i.time.pow(5e-2)))
+                return Decimal.floor(Decimal.log10(player.i.time.pow(5e-2).add(10))).pow(exp)
             }
         } else {
-            return Decimal.floor(Decimal.log10(player.i.time.pow(2.5e-3)))
+            return Decimal.floor(Decimal.log10(player.i.time.pow(2.5e-3).add(10))).pow(exp)
         }
     },
     getNextAt() {
+        exp = decimalOne
+        if (player.d.dilating) exp = Decimal.log10(player.g.electron.pow(0.5))
         if (hasUpgrade('sf', 31)) {
             if (hasUpgrade('sf', 44)) {
                 mult = decimalOne
                 if (player.bl.points.sub(150) > 0) mult = player.bl.points.sub(150)
-                return Decimal.pow(10, getResetGain(this.layer).add(1).div(mult)).pow(2000)
+                return Decimal.pow(10, getResetGain(this.layer).add(1).div(mult)).pow(2000).root(exp)
             } else {
-                return Decimal.pow(10, getResetGain(this.layer).add(1)).pow(2000)
+                return Decimal.pow(10, getResetGain(this.layer).add(1)).pow(2000).root(exp)
             }
         } else {
-            return Decimal.pow(10, getResetGain(this.layer).add(1)).pow(400)
+            return Decimal.pow(10, getResetGain(this.layer).add(1)).pow(400).root(exp)
         }
     },
     canReset() {
-        return getResetGain(this.layer) > 0 && player.i.time.gte(new Decimal("1e2500"))
+        return getResetGain(this.layer).gte(1) && player.i.time.gte(new Decimal("1e2500"))
     },
     prestigeButtonText() {
         if (getResetGain(this.layer) < 100) return "Reset for +"+format(getResetGain(this.layer))+" energy<br><br>"+format(player.i.time)+" / "+format(getNextAt(this.layer))+" time"
@@ -82,12 +86,18 @@ addLayer("e", {
     },
 
     doReset(resettingLayer) {
+        keep = []
+        if (hasMilestone('sf', 2) && resettingLayer == 'sf') keep.push("buyables");
+        if (hasMilestone('g', 0)) keep.push("buyables");
+
         if (layers[resettingLayer].row > this.row)  {
+            layerDataReset(this.layer, keep);
             player.e.electricity = decimalZero
-            player.e.buyableSpent = decimalZero
-            setBuyableAmount(this.layer, 11, new Decimal(0))
-            setBuyableAmount(this.layer, 12, new Decimal(0))
-            player.e.points = new Decimal(100)
+            if (!hasMilestone('sf', 2) || !resettingLayer == 'sf') player.e.buyableSpent = decimalZero
+            if (!hasMilestone('sf', 2) || !resettingLayer == 'sf') setBuyableAmount(this.layer, 11, new Decimal(0))
+            if (!hasMilestone('sf', 2) || !resettingLayer == 'sf') setBuyableAmount(this.layer, 12, new Decimal(0))
+            player.e.points = decimalZero
+            if (hasUpgrade('sf', 53)) player.e.points = new Decimal(100)
         }
     },
 
@@ -101,6 +111,10 @@ addLayer("e", {
                 ],
                 ["display-text",
                     function() { return "(You need at least 1e2500 time for the prestige button to work)" }, {"color": "#DDDD00"}
+                ], "blank",
+                ["toggle", ["e", "auto"]],
+                ["display-text",
+                    function() { return '(Do a specific task to unlock the auto-buyer toggle above)' }
                 ], "blank",
             ]
         },
@@ -133,21 +147,21 @@ addLayer("e", {
                 return Decimal.floor(player.e.buyableSpent.div(6).add(1))
             },
             title: "Primary Charge",
-            display() { return "Increase Velocity Buyable 1 and 3 power.<br><br>Cost: "+format(this.cost(getBuyableAmount(this.layer, this.id)))+" electricity<br>Bought: "+Decimal.floor(format(getBuyableAmount(this.layer, this.id)))+"/100" },
+            display() { return "Increase Velocity Buyable 1 and 3 power.<br><br>Cost: "+format(this.cost(getBuyableAmount(this.layer, this.id)))+" electricity<br>Bought: "+Decimal.floor(format(getBuyableAmount(this.layer, this.id)))+"/20" },
             canAfford() { return player.e.electricity.gte(this.cost()) },
             buy() {
                 player.e.electricity = player.e.electricity.sub(this.cost())
                 player.e.buyableSpent = player.e.buyableSpent.add(this.cost())
                 setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
             },
-            purchaseLimit: 100,
+            purchaseLimit: 20,
         },
         12: {
             cost(x) { 
                 return Decimal.floor(player.e.buyableSpent.div(6).add(1))
             },
             title: "Secondary Charge",
-            display() { return "Decrease Velocity Buyable 1 and 3 cost.<br><br>Cost: "+format(this.cost(getBuyableAmount(this.layer, this.id)))+" electricity<br>Bought: "+Decimal.floor(format(getBuyableAmount(this.layer, this.id)))+"/100" },
+            display() { return "Decrease Velocity Buyable 1 and 3 cost.<br><br>Cost: "+format(this.cost(getBuyableAmount(this.layer, this.id)))+" electricity<br>Bought: "+Decimal.floor(format(getBuyableAmount(this.layer, this.id)))+"/20" },
             canAfford() { return player.e.electricity.gte(this.cost()) },
             buy() {
                 player.e.electricity = player.e.electricity.sub(this.cost())
@@ -155,7 +169,10 @@ addLayer("e", {
                 setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
             },
             unlocked() {return hasChallenge('bl', 21)},
-            purchaseLimit: 100,
+            purchaseLimit: 20,
         },
-    }
+    },
+
+    autoPrestige() { return (player.e.auto && hasUpgrade('sf', 41) && hasUpgrade('sf', 42) && hasUpgrade('sf', 43) && hasUpgrade('sf', 44) && hasUpgrade('sf', 45)) },
+    resetsNothing() { return hasMilestone("v", 5) },
 })

@@ -7,11 +7,13 @@ addLayer("sf", {
     startData() { return {
         unlocked: false,
 		points: new Decimal(0),
+        timeSpent: new Decimal(0),
     }},
     branches: ['v'],
     color: "#419292",
-    requires: new Decimal(1e275),
+    requires: new Decimal(1e270),
     resource: "space fragment", // Name of prestige currency
+    baseResource: "velocity", 
     baseAmount() { return player.v.points },  // A function to return the current amount of baseResource.
     type: "custom", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
     gainMult() { // Calculate the multiplier for main currency from bonuses
@@ -28,26 +30,45 @@ addLayer("sf", {
         {key: "s", description: "S: Reset for star fragments", onPress(){if (canReset(this.layer)) doReset(this.layer)}},
     ],
 
-    update() {
+    update(diff) {
         if (hasUpgrade('v', 31)) {
             unlockSF = 1
         }
+
+        player.sf.timeSpent = player.sf.timeSpent.add(diff)
     },
 
     getResetGain() {
-        if (player.v.points < 1e275) return new Decimal(0)
-        else return new Decimal(1)
+        if (player.v.points < 1e270) {
+            return new Decimal(0)
+        } else {
+            if (hasUpgrade('sf', 11) && hasUpgrade('sf', 21) && hasUpgrade('sf', 31) && hasUpgrade('sf', 41) && hasUpgrade('sf', 51)) {
+                if (hasUpgrade('sf', 12) && hasUpgrade('sf', 22) && hasUpgrade('sf', 32) && hasUpgrade('sf', 42) && hasUpgrade('sf', 52)) {
+                    if (hasUpgrade('sf', 11) && hasUpgrade('sf', 12) && hasUpgrade('sf', 13) && hasUpgrade('sf', 14) && hasUpgrade('sf', 15)) {
+                        if (hasUpgrade('g', 14)) {
+                            return Decimal.log2(Decimal.log10(Decimal.log10(player.v.points.add(10)).add(10)).add(2)).times(Decimal.log2(player.sf.points)).times(Decimal.log10(Decimal.log10(Decimal.log10(player.i.time.add(10)).add(10)).add(10))).times(player.g.points.pow(0.5)).pow(Decimal.min(Decimal.log2(player.sf.timeSpent.div(10).add(2)), 5)).add(1)
+                        } else {
+                            return Decimal.log2(Decimal.log10(Decimal.log10(player.v.points.add(10)).add(10)).add(2)).times(Decimal.log2(player.sf.points)).times(Decimal.log10(Decimal.log10(Decimal.log10(player.i.time.add(10)).add(10)).add(10))).pow(Decimal.min(Decimal.log2(player.sf.timeSpent.div(10).add(2)), 5)).add(1)
+                        }
+                    } else {
+                        return Decimal.log2(Decimal.log10(Decimal.log10(player.v.points.add(10)).add(10)).add(2)).times(Decimal.log2(player.sf.points)).times(Decimal.log10(Decimal.log10(Decimal.log10(player.i.time.add(10)).add(10)).add(10))).add(1)
+                    }
+                } else {
+                    return Decimal.log2(Decimal.log10(Decimal.log10(player.v.points.add(10)).add(10)).add(2)).add(1)
+                }
+            } else {
+                return new Decimal(1)
+            }
+        }
     },
     getNextAt() {
-        if (player.v.points < 1e275) return 1e275
-        else return NaN
+        return NaN
     },
     canReset() {
         return getResetGain(this.layer) > 0
     },
     prestigeButtonText() {
-        if (getResetGain(this.layer) < 100) return "Reset for +"+format(getResetGain(this.layer))+" space fragments<br><br>"+format(player.v.points)+" / "+format(getNextAt(this.layer))+" velocity"
-        else return "Reset for +"+format(getResetGain(this.layer))+" space fragments"
+        return "Reset for +"+format(getResetGain(this.layer))+" space fragments"
     },
 
     tabFormat: {
@@ -68,28 +89,88 @@ addLayer("sf", {
                     function() { return '<b>Fragment Descoveries</b>' }, {"font-size": "32px", "color": "#419292"}
                 ], "blank",
                 ["display-text",
-                    function() { return 'FRAGMENT COMPLETION:<br>1. Keep Velocity and Black Hole Milestones on all resets<br>2. Start with 100 velocity and energy for all row 4 resets<br>3. Electricity cost multiplier is lowered<br>4. Time and Number ^10, and Velocity Upgrade 5 is better.' }
+                    function() { if (hasMilestone('sf', 2)) return '(All missing fragments divide your currency by the cost instead of subtracting!)' }, {"font-size": "20px", "color": "#FF0000"}
+                ], "blank",
+                ["display-text",
+                    function() { return 'FRAGMENT COMPLETION:<br>1. Keep Velocity and Black Hole Milestones on all resets, and unlock more milestones.<br>2. Start with 100 velocity and energy for all row 4 resets.<br>3. Electricity cost multiplier is lowered.<br>4. Time and Number ^10, and Velocity Upgrade 5 is better.' }
                 ], "blank",
                 "upgrades",
             ],
+            unlocked() {return hasMilestone('sf', 0)}
+        },
+        "Completions": {
+            content: [
+                "main-display",
+                ["display-text",
+                    function() { return '<b>Fragment Completions</b>' }, {"font-size": "32px", "color": "#419292"}
+                ], "blank",
+                ["display-text",
+                    function() { return 'Buy all upgrades in a row/column to unlock more boosts. (Excluding 3rd row/column)' }, {"font-size": "20px", "color": "#FF0000"}
+                ], "blank",
+                ["infobox", "row1"],
+                ["infobox", "row2"],
+                ["infobox", "row4"],
+                ["infobox", "row5"],
+                ["infobox", "column1"],
+                ["infobox", "column2"],
+                ["infobox", "column4"],
+                ["infobox", "column5"],
+            ],
+            unlocked() {return hasUpgrade('sf', 31) && hasUpgrade('sf', 42) && hasUpgrade('sf', 53) && hasUpgrade('sf', 44) && hasUpgrade('sf', 35)}
         },
     },
 
     milestones: {
         0: {
             requirementDescription: "1 space fragment",
-            effectDescription: "Unlock a new tab, exponential growth without the 1st number upgrade and keep the number limit broken.",
+            effectDescription: "Unlock a new tab, exponential growth without the 1st number upgrade, and keep the number limit broken on all resets.",
             done() { return player.sf.points.gte(1) }
         },
         1: {
+            requirementDescription: "2 space fragment",
+            effectDescription: "Keep black hole challenges and velocity buyable on reset.",
+            done() { return player.sf.points.gte(2) },
+            unlocked() {return hasUpgrade('sf', 53)}
+        },
+        2: {
             requirementDescription: "3 space fragment",
-            effectDescription: "[PLACEHOLDER]",
+            effectDescription: "Unlock Missing Star Fragment Upgrades and a new tab.",
             done() { return player.sf.points.gte(3) },
+            unlocked() {return hasUpgrade('sf', 53)}
+        },
+        3: {
+            requirementDescription: "5 space fragment",
+            effectDescription: "Keep black hole upgrades, velocity upgrades and energy buyables on reset.",
+            done() { return player.sf.points.gte(5) },
             unlocked() {return hasUpgrade('sf', 53)}
         },
     },
 
     upgrades: {
+        11: {
+            fullDisplay() {
+                return "<b>Missing Fragment N-11</b><br>This is solely for fragment progression.<br><br>Cost: e1.000e50 number"
+            },
+            canAfford() {
+                return player.points.gte(new Decimal("ee50"))
+            },
+            pay() {
+                return player.points = player.points.div(new Decimal("ee50"))
+            },
+            unlocked() {return hasMilestone('sf', 2)}
+        },
+        12: {
+            fullDisplay() {
+                return "<b>Missing Fragment N-12</b><br>This is solely for fragment progression.<br><br>Cost: e1.000e100 number"
+            },
+            canAfford() {
+                return player.points.gte(new Decimal("ee100"))
+            },
+            pay() {
+                return player.points = player.points.div(new Decimal("ee100"))
+            },
+            unlocked() {return hasMilestone('sf', 2)}
+        },
         13: {
             fullDisplay() {
                 return "<b>Simple Boost</b><br>Infinity boost x10, which is not affected by cap.<br><br>Cost: 1e20 number"
@@ -101,6 +182,42 @@ addLayer("sf", {
                 return player.points = player.points.div(1e20)
             },
             unlocked() {return hasMilestone('sf', 0)}
+        },
+        14: {
+            fullDisplay() {
+                return "<b>Missing Fragment N-14</b><br>This is solely for fragment progression.<br><br>Cost: e1.000e200 number"
+            },
+            canAfford() {
+                return player.points.gte(new Decimal("ee200"))
+            },
+            pay() {
+                return player.points = player.points.div(new Decimal("ee200"))
+            },
+            unlocked() {return hasMilestone('sf', 2)}
+        },
+        15: {
+            fullDisplay() {
+                return "<b>Missing Fragment N-15</b><br>This is solely for fragment progression.<br><br>Cost: e1.000e2,000 number"
+            },
+            canAfford() {
+                return player.points.gte(new Decimal("ee2000"))
+            },
+            pay() {
+                return player.points = player.points.div(new Decimal("ee2000"))
+            },
+            unlocked() {return hasMilestone('sf', 2)}
+        },
+        21: {
+            fullDisplay() {
+                return "<b>Missing Fragment I-21</b><br>This is solely for fragment progression.<br><br>Cost: e1.000e50 infinity"
+            },
+            canAfford() {
+                return player.i.points.gte(new Decimal("ee50"))
+            },
+            pay() {
+                return player.i.points = player.i.points.div(new Decimal("ee50"))
+            },
+            unlocked() {return hasMilestone('sf', 2)}
         },
         22: {
             fullDisplay() {
@@ -138,6 +255,18 @@ addLayer("sf", {
             },
             unlocked() {return hasUpgrade('sf', 23)}
         },
+        25: {
+            fullDisplay() {
+                return "<b>Missing Fragment T-25</b><br>This is solely for fragment progression.<br><br>Cost: e1.000e300 time"
+            },
+            canAfford() {
+                return player.i.time.gte(new Decimal("ee300"))
+            },
+            pay() {
+                return player.i.time = player.i.time.div(new Decimal("ee300"))
+            },
+            unlocked() {return hasMilestone('sf', 2)}
+        },
         31: {
             fullDisplay() {
                 return "<b>Energy Specify</b><br>Make the energy formula better.<br><br>Cost: 1,000,000 energy"
@@ -164,7 +293,7 @@ addLayer("sf", {
         },
         33: {
             fullDisplay() {
-                return "<b>Starting Resources</b><br>Infinity gain x1e40, Time gain x1,000 and Unlock all Velocity Milestones automatically.<br><br>Cost: 1.00e40 infinity"
+                return "<b>Starting Resources</b><br>Infinity gain x1e40, Time gain x1,000 and Unlock Velocity Milestones 1-4 automatically.<br><br>Cost: 1.00e40 infinity"
             },
             canAfford() {
                 return player.i.points >= 1e20
@@ -197,6 +326,18 @@ addLayer("sf", {
                 return player.v.points = player.v.points.sub(1e9)
             },
             unlocked() {return hasUpgrade('sf', 34)}
+        },
+        41: {
+            fullDisplay() {
+                return "<b>Missing Fragment V-41</b><br>This is solely for fragment progression.<br><br>Cost: 1.00e320 velocity"
+            },
+            canAfford() {
+                return player.v.points.gte(new Decimal("1e320"))
+            },
+            pay() {
+                return player.v.points = player.v.points.div(new Decimal("1e320"))
+            },
+            unlocked() {return hasMilestone('sf', 2)}
         },
         42: {
             fullDisplay() {
@@ -234,17 +375,122 @@ addLayer("sf", {
             },
             unlocked() {return hasUpgrade('sf', 43) && hasUpgrade('sf', 34)}
         },
-        53: {
+        45: {
             fullDisplay() {
-                return "<b>FRAGMENT COMPLETION</b><br>Unlock more milestones and other things.<br><br>Cost: 1.00e275 velocity"
+                return "<b>Missing Fragment V-45</b><br>This is solely for fragment progression.<br><br>Cost: 1.00e500 velocity"
             },
             canAfford() {
-                return player.v.points >= 1e275
+                return player.v.points.gte(new Decimal("1e500"))
             },
             pay() {
-                return player.v.points = player.v.points.sub(1e275)
+                return player.v.points = player.v.points.div(new Decimal("1e500"))
+            },
+            unlocked() {return hasMilestone('sf', 2)}
+        },
+        51: {
+            fullDisplay() {
+                return "<b>Missing Fragment S-51</b><br>This is solely for fragment progression.<br><br>Cost: 10 star fragment"
+            },
+            canAfford() {
+                return player.sf.points >= 10
+            },
+            pay() {
+                return player.sf.points = player.sf.points.div(20)
+            },
+            unlocked() {return hasMilestone('sf', 2)}
+        },
+        52: {
+            fullDisplay() {
+                return "<b>Missing Fragment S-52</b><br>This is solely for fragment progression.<br><br>Cost: 50 star fragment"
+            },
+            canAfford() {
+                return player.sf.points >= 50
+            },
+            pay() {
+                return player.sf.points = player.sf.points.div(50)
+            },
+            unlocked() {return hasMilestone('sf', 2)}
+        },
+        53: {
+            fullDisplay() {
+                return "<b>FRAGMENT COMPLETION</b><br>Finish the fragment.<br><br>Cost: 1.00e200 velocity"
+            },
+            canAfford() {
+                return player.v.points >= 1e200
+            },
+            pay() {
+                return player.v.points = player.v.points.sub(1e200)
             },
             unlocked() {return hasUpgrade('sf', 33)}
         },
+        54: {
+            fullDisplay() {
+                return "<b>Missing Fragment S-54</b><br>This is solely for fragment progression.<br><br>Cost: 1,000 star fragment"
+            },
+            canAfford() {
+                return player.sf.points >= 1000
+            },
+            pay() {
+                return player.sf.points = player.sf.points.div(1000)
+            },
+            unlocked() {return hasMilestone('sf', 2)}
+        },
+        55: {
+            fullDisplay() {
+                return "<b>Missing Fragment S-55</b><br>This is solely for fragment progression.<br><br>Cost: 10,000 star fragment"
+            },
+            canAfford() {
+                return player.sf.points >= 10000
+            },
+            pay() {
+                return player.sf.points = player.sf.points.div(10000)
+            },
+            unlocked() {return hasMilestone('sf', 2)}
+        },
     },
+
+    infoboxes: {
+        row1: {
+            title: "Row 1 Completion",
+            body() { return "The longer you wait, the better the star fragment boosts with a limit." },
+            unlocked() {return hasUpgrade('sf', 11) && hasUpgrade('sf', 12) && hasUpgrade('sf', 13) && hasUpgrade('sf', 14) && hasUpgrade('sf', 15)}
+        },
+        row2: {
+            title: "Row 2 Completion",
+            body() { return "Number grow double exponentially when online." },
+            unlocked() {return hasUpgrade('sf', 21) && hasUpgrade('sf', 22) && hasUpgrade('sf', 23) && hasUpgrade('sf', 24) && hasUpgrade('sf', 25)}
+        },
+        row4: {
+            title: "Row 4 Completion",
+            body() { return "Velocity grow double exponentially when online, and unlock auto-energy." },
+            unlocked() {return hasUpgrade('sf', 41) && hasUpgrade('sf', 42) && hasUpgrade('sf', 43) && hasUpgrade('sf', 44) && hasUpgrade('sf', 45)}
+        },
+        row5: {
+            title: "Row 5 Completion",
+            body() { return "Increase number double exponential gain by star fragment." },
+            unlocked() {return hasUpgrade('sf', 51) && hasUpgrade('sf', 52) && hasUpgrade('sf', 53) && hasUpgrade('sf', 54) && hasUpgrade('sf', 55)}
+        },
+        column1: {
+            title: "Column 1 Completion",
+            body() { return "You can get more than 1 space fragment per reset." },
+            unlocked() {return hasUpgrade('sf', 11) && hasUpgrade('sf', 21) && hasUpgrade('sf', 31) && hasUpgrade('sf', 41) && hasUpgrade('sf', 51)}
+        },
+        column2: {
+            title: "Column 2 Completion",
+            body() { return "Increase space fragment gain by space fragment and time." },
+            unlocked() {return hasUpgrade('sf', 12) && hasUpgrade('sf', 22) && hasUpgrade('sf', 32) && hasUpgrade('sf', 42) && hasUpgrade('sf', 52)}
+        },
+        column4: {
+            title: "Column 4 Completion",
+            body() { return "Increase number double exponential gain by machine and black hole." },
+            unlocked() {return hasUpgrade('sf', 14) && hasUpgrade('sf', 24) && hasUpgrade('sf', 34) && hasUpgrade('sf', 44) && hasUpgrade('sf', 54)}
+        },
+        column5: {
+            title: "Column 5 Completion",
+            body() { return "Generate machine depending on star fragment when online." },
+            unlocked() {return hasUpgrade('sf', 15) && hasUpgrade('sf', 25) && hasUpgrade('sf', 35) && hasUpgrade('sf', 45) && hasUpgrade('sf', 55)}
+        },
+    },
+
+    passiveGeneration() { return (hasMilestone("g", 4))?1:(hasMilestone("g", 4))?0.1:0 },
 })

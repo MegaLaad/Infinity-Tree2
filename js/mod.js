@@ -1,13 +1,14 @@
 let modInfo = {
 	name: "The Infinity Tree",
 	id: "mymod",
-	author: "nobody",
+	author: "PikapikaHei",
 	pointsName: "number",
 	modFiles: ["_1number.js", 
 		"_2infinity.js", "_2machines.js", 
 		"_3velocity.js", "_3blackHole.js", "_3energy.js", 
-		"_4spaceFragment.js",
-		"tree.js"],
+		"_4spaceFragment.js", "_4generator.js", "_4space.js", "_4dilation.js",
+		"_5universe.js",
+		"tree.js", "!achievement.js"],
 
 	discordName: "",
 	discordLink: "",
@@ -17,14 +18,12 @@ let modInfo = {
 
 // Set your version in num and name
 let VERSION = {
-	num: "0.0",
-	name: "Literally nothing",
+	num: "1.0.2",
+	name: "Added things.",
 }
 
 let changelog = `<h1>Changelog:</h1><br>
-	<h3>v0.0</h3><br>
-		- Added things.<br>
-		- Added stuff.`
+	Nothing to see here`
 
 let winText = `Congratulations! You have reached the end and beaten this game, but for now...`
 
@@ -59,7 +58,7 @@ var displayThings = [
 
 // Determines when the game "ends"
 function isEndgame() {
-	return player.points.gte(new Decimal("10^^10"))
+	return player.points.gte(new Decimal("10^^1e10"))
 }
 
 

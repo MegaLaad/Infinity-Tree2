@@ -63,9 +63,12 @@ addLayer("bl", {
     },
 
     doReset(resettingLayer) {
-        player.i.time = new Decimal(0);
 		let keep = [];
         if (hasUpgrade('sf', 53)) keep.push("milestones");
+        if (hasMilestone('sf', 1) && resettingLayer == 'sf') keep.push("challenges");
+        if (hasMilestone('sf', 2) && resettingLayer == 'sf') keep.push("upgrades");
+        if (hasMilestone('g', 1)) keep.push("challenges");
+        if (hasMilestone('g', 1)) keep.push("upgrades");
 		if (layers[resettingLayer].row > this.row) layerDataReset(this.layer, keep);
 	},
     
@@ -80,14 +83,14 @@ addLayer("bl", {
             done() { return player.bl.points.gte(3) || hasUpgrade('sf', 42) }
         },
         1: {
-            requirementDescription: "15 black holes",
+            requirementDescription: "7 black holes",
             effectDescription: "Unlock auto-black hole.",
-            done() { return player.bl.points.gte(15) || hasUpgrade('sf', 42) }
+            done() { return player.bl.points.gte(7) || hasUpgrade('sf', 42) }
         },
         2: {
-            requirementDescription: "22 black holes",
+            requirementDescription: "8 black holes",
             effectDescription: "Black Hole resets nothing.",
-            done() { return (player.bl.points.gte(22) && hasChallenge('bl', 21)) || hasUpgrade('sf', 42) }
+            done() { return (player.bl.points.gte(8) && hasChallenge('bl', 21)) || hasUpgrade('sf', 42) }
         },
     },
 
