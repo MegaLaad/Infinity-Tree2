@@ -22,7 +22,7 @@ addLayer("n", {
 
     tooltip() {return format(player.points)+" number"},
 
-    update() {
+    update(diff) {
         tmp2 = decimalOne
         if (hasUpgrade('sf', 13)) tmp2 = new Decimal(10)
 
@@ -32,15 +32,17 @@ addLayer("n", {
             if (hasChallenge('bl', 12)) exp = exp.times(2)
             if (hasChallenge('bl', 21)) exp = exp.times(2)
         }
-
         if (hasUpgrade('sf', 53)) exp = exp.times(10)
-        if (((hasUpgrade('n', 11)) && (player.points < 1e309 || hasUpgrade('i', 21))) || hasMilestone('sf', 0)) player.points = player.points.add(1).times(new Decimal(1).add(Decimal.pow(getBuyableAmount('n', 12).add(2), new Decimal(0.1).times(getBuyableAmount('n', 11).add(1)))).pow(Decimal.min(player.i.points.add(1), new Decimal(100).times(upgradeEffect('m', 11)))).times(tmp2).pow(Decimal.min(player.v.points.times(10).add(1), 100)).pow(exp))
+        exp = exp.times(Decimal.pow(10, getBuyableAmount('u', 11).pow(1.5)))
+
+        if (((hasUpgrade('n', 11)) && (player.points < 1e309 || hasUpgrade('i', 21))) || hasMilestone('sf', 0)) player.points = player.points.add(1).times(new Decimal(1).add(Decimal.pow(getBuyableAmount('n', 12).add(2), new Decimal(0.1).times(getBuyableAmount('n', 11).add(1)))).pow(Decimal.min(player.i.points.add(1), new Decimal(100).times(upgradeEffect('m', 11)))).times(tmp2).pow(Decimal.min(player.v.points.times(10).add(1), 100)).pow(exp).pow(new Decimal(diff).times(10)))
     
             exp2 = decimalOne
             if (hasUpgrade('g', 13)) {
                 exp2 = Decimal.log10(player.g.points.add(10)).times(2)
             }
             if (getBuyableAmount('n', 21).gte(1)) exp2 = exp2.times(exp.add(1)).times(Decimal.pow(4, getBuyableAmount('n', 21).pow(1.5)).times(100))
+            exp2 = exp.times(Decimal.pow(2, getBuyableAmount('u', 11)))
 
             if (player.d.dilating) exp2 = decimalOne
 

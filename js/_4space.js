@@ -8,16 +8,18 @@ addLayer("s", {
     }},
     color: "#676767",
     branches: ['bl'],
-    requires: new Decimal(8000),
+    requires: new Decimal(1000),
     resource: "space", // Name of prestige currency
     baseResource: "black hole",                 // The name of the resource your prestige gain is based on.
     baseAmount() { return player.bl.points },  // A function to return the current amount of baseResource.
     type: "custom", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
     effectDescription() { 
-        return "which are generating "+format(Decimal.min(player.s.points, 1e19).times(100))+" / 1.00e21 black hole per second when online."
+        mult = new Decimal(100)
+        if (hasMilestone('u', 4)) mult = mult.times(100)
+        return "which are generating "+format(Decimal.min(player.s.points, 1e19).times(mult))+" / "+format(mult.times(1e19))+" black hole per second when online."
     },
     getResetGain() {
-        gain = player.bl.points.div(1000).sub(7)
+        gain = player.bl.points.div(1000)
 
         if (hasUpgrade('d', 12) && player.d.dilating) gain = gain.times(player.d.relativityGain.pow(0.9))
 
@@ -37,7 +39,9 @@ addLayer("s", {
     layerShown(){return true},
 
     update() {
-        player.bl.points = player.bl.points.add(Decimal.min(player.s.points, 1e19).times(10))
+        mult = new Decimal(10)
+        if (hasMilestone('u', 4)) mult = mult.times(100)
+        player.bl.points = player.bl.points.add(Decimal.min(player.s.points, mult.times(1e20)).times(mult))
     },
  
     tabFormat: {
@@ -63,16 +67,22 @@ addLayer("s", {
         }, 
     },
 
+    doReset(resettingLayer) {
+		let keep = ["buyables"];
+        if (hasMilestone('u', 4) && resettingLayer == 'u') keep.push("milestones");
+		if (layers[resettingLayer].row > this.row) layerDataReset(this.layer, keep);
+	},
+
     milestones: {
         0: {
             requirementDescription: "1e75 Star Fragment & 1e16 Generator",
             effectDescription: "Unlock a new tab.",
-            done() { return player.sf.points.gte(1e75) && player.g.points.gte(1e16) }
+            done() { return (player.sf.points.gte(1e75) && player.g.points.gte(1e16)) || hasMilestone('u', 4) }
         },
         1: {
             requirementDescription: "1e20 Space",
             effectDescription: "Gain 20% of space every second.",
-            done() { return player.s.points.gte(1e20) }
+            done() { return player.s.points.gte(1e20) || hasMilestone('u', 4) }
         },
     },
 
@@ -113,6 +123,31 @@ addLayer("s", {
             },
             canAfford() { 
                 return player.s.points.gte(this.cost()) && player.g.quarks.gte(8e19)
+            },
+            buy() {
+                player.s.points = player.s.points.sub(this.cost())
+                player.g.lastQuarks = decimalZero
+                player.g.quarksGain = decimalZero
+                player.g.quarks = decimalZero
+                player.g.points = decimalZero
+                player.g.lastElectron = decimalZero
+                player.g.electronGain = decimalZero
+                player.g.electron = decimalZero
+                setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+            },
+            purchaseLimit: 1,
+        },
+        21: {
+            cost(x) { 
+                //Space Cost
+                return new Decimal("1e1000")
+            },
+            title() { return "Star ("+getBuyableAmount('s', 21)+"/1)"},
+            display() { 
+                return "Unlock 1 extra velocity buyables.<br><br>Cost: "+format(this.cost(getBuyableAmount(this.layer, this.id)))+" space + e1.000e16 quarks<br><br>(Buying this resets Generators, Electrons and Quarks)" 
+            },
+            canAfford() { 
+                return player.s.points.gte(this.cost()) && player.g.quarks.gte("ee16")
             },
             buy() {
                 player.s.points = player.s.points.sub(this.cost())

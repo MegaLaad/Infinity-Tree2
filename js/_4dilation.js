@@ -47,6 +47,8 @@ addLayer("d", {
 
         if (player.d.dilating) player.d.relativityGain = gain
         else player.d.relativityGain = decimalZero
+
+        if (hasMilestone('u', 5)) player.d.relativity = player.d.relativity.add(player.d.relativityGain.times(10))
     },
  
     tabFormat: {

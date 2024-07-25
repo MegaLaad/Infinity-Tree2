@@ -24,29 +24,31 @@ addLayer("g", {
         else return "which are boosting number double exponent gain by ^"+format(Decimal.log10(player.g.points.add(10)).times(2))+"."
     },
     getResetGain() {
+        mult = Decimal.pow(10, getBuyableAmount('u', 22).times(2).pow(3))
+        exp = Decimal.pow(1.1, getBuyableAmount('u', 22))
         if (hasMilestone('g', 1)) {
             if (hasMilestone('g', 2)) {
                 if (hasMilestone('g', 6)) {
                     mult = 1
                     if (hasUpgrade('g', 11)) {
-                        if (!isNaN(Decimal.log10(player.g.quarks.add(5)))) mult = Decimal.pow(2, Decimal.log10(player.g.quarks.add(10)).add(1))
+                        if (!isNaN(Decimal.log10(player.g.quarks.add(10)).add(10))) mult = Decimal.pow(2, Decimal.log10(player.g.quarks.add(10)).add(1))
                     }
                     if (hasUpgrade('g', 12)) {
-                        gain = Decimal.log2(Decimal.log10(Decimal.log10(player.e.points)).times(Decimal.pow(1.8, Decimal.log10(player.sf.points).pow(0.95)))).sub(7).add(Decimal.log2(Decimal.log10(player.g.electron.add(10)).add(2))).times(mult).times(player.g.points.pow(0.5).add(1))
+                        gain = Decimal.log2(Decimal.log10(Decimal.log10(player.e.points.add(10)).add(10)).times(Decimal.pow(1.8, Decimal.log10(player.sf.points.add(10)).pow(0.95))).add(2)).sub(7).add(Decimal.log2(Decimal.log10(player.g.electron.add(10)).add(2))).times(mult).times(player.g.points.pow(0.5).add(1))
                     } else {
-                        gain = Decimal.log2(Decimal.log10(Decimal.log10(player.e.points)).times(Decimal.pow(1.8, Decimal.log10(player.sf.points).pow(0.95)))).sub(7).add(Decimal.log2(Decimal.log10(player.g.electron.add(10)).add(2))).times(mult)
+                        gain = Decimal.log2(Decimal.log10(Decimal.log10(player.e.points)).times(Decimal.pow(1.8, Decimal.log10(player.sf.points.add(10)).pow(0.95))).add(2)).sub(7).add(Decimal.log2(Decimal.log10(player.g.electron.add(10)).add(2))).times(mult)
                     }
                 } else {
-                    gain = Decimal.log2(Decimal.log10(Decimal.log10(player.e.points)).times(Decimal.log2(player.sf.points).pow(1.4))).sub(7).add(Decimal.log2(Decimal.log10(player.g.electron.add(10)).add(2)))
+                    gain = Decimal.log2(Decimal.log10(Decimal.log10(player.e.points.add(10)).add(10)).times(Decimal.log2(player.sf.points.add(2)).pow(1.4)).add(2)).sub(7).add(Decimal.log2(Decimal.log10(player.g.electron.add(10)).add(2)))
                 }
             } else {
-                gain = Decimal.log2(Decimal.log10(Decimal.log10(player.e.points))).sub(7).add(Decimal.log2(Decimal.log10(player.g.electron.add(10)).add(2)))
+                gain = Decimal.log2(Decimal.log10(Decimal.log10(player.e.points.add(10)).add(10)).add(2)).sub(7).add(Decimal.log2(Decimal.log10(player.g.electron.add(10)).add(2)))
             }
         } else {
-            gain = Decimal.log2(Decimal.log10(Decimal.log10(player.e.points))).sub(7)
+            gain = Decimal.log2(Decimal.log10(Decimal.log10(player.e.points.add(10)).add(10))).sub(7)
         }
 
-        if (!isNaN(gain) && gain.gte(1)) return gain
+        if (!isNaN(gain) && gain.gte(1)) return gain.times(mult).pow(exp)
         else return decimalZero
     },
     getNextAt() {
@@ -71,7 +73,7 @@ addLayer("g", {
                 ],
                 ["display-text",
                     function() { 
-                        if (hasMilestone('g', 1)) return "(You need at least e1.000e256 energy for the prestige button to work)" }, {"color": "#DD3652"}
+                        return "(You need at least e1.000e256 energy for the prestige button to work)" }, {"color": "#DD3652"}
                 ], "blank",
                 "milestones", "blank"
             ]
@@ -91,6 +93,12 @@ addLayer("g", {
         },
         
     },
+
+    doReset(resettingLayer) {
+		let keep = [];
+        if (hasMilestone('u', 3) && resettingLayer == 'u') keep.push("milestones");
+		if (layers[resettingLayer].row > this.row) layerDataReset(this.layer, keep);
+	},
 
     update() {
         player.g.electronGain = player.g.points.times(100).pow(10)
@@ -156,48 +164,48 @@ addLayer("g", {
         0: {
             requirementDescription: "1e20 Electron",
             effectDescription: "Keep energy buyables on all resets.",
-            done() { return player.g.electron.gte(1e20) }
+            done() { return player.g.electron.gte(1e20) || hasMilestone('u', 3) }
         },
         1: {
             requirementDescription: "3 Generator",
             effectDescription: "Keep black hole upgrades and challenges on all resets, and increase generator gain by electron.",
-            done() { return player.g.points.gte(3) },
+            done() { return player.g.points.gte(3) || hasMilestone('u', 3) },
             unlocked() {return hasMilestone('g', 0)},
         },
         2: {
             requirementDescription: "18 Generator",
             effectDescription: "Keep velocity upgrades and buyables on all resets, and increase generator gain by star shard.",
-            done() { return player.g.points.gte(18) },
+            done() { return player.g.points.gte(18) || hasMilestone('u', 3) },
             unlocked() {return hasMilestone('g', 1)},
         },
         3: {
             requirementDescription: "1e37 Electron",
             effectDescription: "Generate electron depending on last electron gain.",
-            done() { return player.g.electron.gte(1e37) },
+            done() { return player.g.electron.gte(1e37) || hasMilestone('u', 3) },
             unlocked() {return hasMilestone('g', 2)},
         },
         4: {
             requirementDescription: "50 Generator",
             effectDescription: "Generate 10% of Generator and Star Fragment every second.",
-            done() { return player.g.points.gte(50) },
+            done() { return player.g.points.gte(50) || hasMilestone('u', 3) },
             unlocked() {return hasMilestone('g', 3)},
         },
         5: {
             requirementDescription: "1e45 Electron",
             effectDescription: "Generate electron depending on current electron gain with worse effect.",
-            done() { return player.g.electron.gte(1e45) },
+            done() { return player.g.electron.gte(1e45) || hasMilestone('u', 3) },
             unlocked() {return hasMilestone('g', 4)},
         },
         6: {
             requirementDescription: "1e48 Electron",
             effectDescription: "Unlock Quarks, and Generator Milestone 3 is better.",
-            done() { return player.g.electron.gte(1e48) },
+            done() { return player.g.electron.gte(1e48) || hasMilestone('u', 3) },
             unlocked() {return hasMilestone('g', 5)},
         },
         7: {
             requirementDescription: "1e113 Electron",
             effectDescription: "Generate 1000% of Quarks, 100% of Electron, Generator and Star Fragment every second.",
-            done() { return player.g.electron.gte(1e113) },
+            done() { return player.g.electron.gte(1e113) || hasMilestone('u', 3) },
             unlocked() {return hasMilestone('g', 6)},
         },
     },

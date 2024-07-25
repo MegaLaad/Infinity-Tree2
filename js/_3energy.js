@@ -136,12 +136,11 @@ addLayer("e", {
     buyables: {
         showRespec: true,
         respec() { // Optional, reset things and give back your currency. Having this function makes a respec button appear
-            player.e.points = player.e.points.add(player.e.buyableSpent) // A built-in thing to keep track of this but only keeps a single value
             player.e.buyableSpent = new Decimal(0)
             setBuyableAmount(this.layer, 11, new Decimal(0))
             setBuyableAmount(this.layer, 12, new Decimal(0))
-            doReset(this.layer, true) // Force a reset
         },
+        respecMessage: "Are you sure you want to respec?",
         11: {
             cost(x) { 
                 return Decimal.floor(player.e.buyableSpent.div(6).add(1))

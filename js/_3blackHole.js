@@ -65,6 +65,7 @@ addLayer("bl", {
     doReset(resettingLayer) {
 		let keep = [];
         if (hasUpgrade('sf', 53)) keep.push("milestones");
+        if (hasMilestone('u', 1) && resettingLayer == 'u') keep.push("milestones");
         if (hasMilestone('sf', 1) && resettingLayer == 'sf') keep.push("challenges");
         if (hasMilestone('sf', 2) && resettingLayer == 'sf') keep.push("upgrades");
         if (hasMilestone('g', 1)) keep.push("challenges");
@@ -80,17 +81,17 @@ addLayer("bl", {
         0: {
             requirementDescription: "3 black holes",
             effectDescription: "Keep machine upgrades on all resets.",
-            done() { return player.bl.points.gte(3) || hasUpgrade('sf', 42) }
+            done() { return player.bl.points.gte(3) || hasUpgrade('sf', 42) || hasMilestone('u', 1) }
         },
         1: {
             requirementDescription: "7 black holes",
             effectDescription: "Unlock auto-black hole.",
-            done() { return player.bl.points.gte(7) || hasUpgrade('sf', 42) }
+            done() { return player.bl.points.gte(7) || hasUpgrade('sf', 42) || hasMilestone('u', 1) }
         },
         2: {
             requirementDescription: "8 black holes",
             effectDescription: "Black Hole resets nothing.",
-            done() { return (player.bl.points.gte(8) && hasChallenge('bl', 21)) || hasUpgrade('sf', 42) }
+            done() { return (player.bl.points.gte(8) && hasChallenge('bl', 21)) || hasUpgrade('sf', 42) || hasMilestone('u', 1) }
         },
     },
 

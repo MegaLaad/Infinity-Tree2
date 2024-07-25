@@ -45,6 +45,7 @@ function getPointGen() {
 	if(!canGenPoints()) return new Decimal(0)
 
 	let gain = new Decimal(1)
+	gain = gain.times(Decimal.pow(10, getBuyableAmount('u', 11).pow(1.5)))
 	return gain
 }
 

@@ -39,6 +39,8 @@ addLayer("sf", {
     },
 
     getResetGain() {
+        mult = Decimal.pow(10, getBuyableAmount('u', 21).times(2).pow(3))
+        exp = Decimal.pow(1.1, getBuyableAmount('u', 21))
         if (player.v.points < 1e270) {
             return new Decimal(0)
         } else {
@@ -46,18 +48,18 @@ addLayer("sf", {
                 if (hasUpgrade('sf', 12) && hasUpgrade('sf', 22) && hasUpgrade('sf', 32) && hasUpgrade('sf', 42) && hasUpgrade('sf', 52)) {
                     if (hasUpgrade('sf', 11) && hasUpgrade('sf', 12) && hasUpgrade('sf', 13) && hasUpgrade('sf', 14) && hasUpgrade('sf', 15)) {
                         if (hasUpgrade('g', 14)) {
-                            return Decimal.log2(Decimal.log10(Decimal.log10(player.v.points.add(10)).add(10)).add(2)).times(Decimal.log2(player.sf.points)).times(Decimal.log10(Decimal.log10(Decimal.log10(player.i.time.add(10)).add(10)).add(10))).times(player.g.points.pow(0.5)).pow(Decimal.min(Decimal.log2(player.sf.timeSpent.div(10).add(2)), 5)).add(1)
+                            return Decimal.log2(Decimal.log10(Decimal.log10(player.v.points.add(10)).add(10)).add(2)).times(Decimal.log2(player.sf.points.add(2))).times(Decimal.log10(Decimal.log10(Decimal.log10(player.i.time.add(10)).add(10)).add(10))).times(player.g.points.pow(0.5).add(1)).pow(Decimal.min(Decimal.log2(player.sf.timeSpent.div(10).add(2)), 5)).add(1).times(mult).pow(exp)
                         } else {
-                            return Decimal.log2(Decimal.log10(Decimal.log10(player.v.points.add(10)).add(10)).add(2)).times(Decimal.log2(player.sf.points)).times(Decimal.log10(Decimal.log10(Decimal.log10(player.i.time.add(10)).add(10)).add(10))).pow(Decimal.min(Decimal.log2(player.sf.timeSpent.div(10).add(2)), 5)).add(1)
+                            return Decimal.log2(Decimal.log10(Decimal.log10(player.v.points.add(10)).add(10)).add(2)).times(Decimal.log2(player.sf.points.add(2))).times(Decimal.log10(Decimal.log10(Decimal.log10(player.i.time.add(10)).add(10)).add(10))).pow(Decimal.min(Decimal.log2(player.sf.timeSpent.div(10).add(2)), 5)).add(1).times(mult).pow(exp)
                         }
                     } else {
-                        return Decimal.log2(Decimal.log10(Decimal.log10(player.v.points.add(10)).add(10)).add(2)).times(Decimal.log2(player.sf.points)).times(Decimal.log10(Decimal.log10(Decimal.log10(player.i.time.add(10)).add(10)).add(10))).add(1)
+                        return Decimal.log2(Decimal.log10(Decimal.log10(player.v.points.add(10)).add(10)).add(2)).times(Decimal.log2(player.sf.points.add(2))).times(Decimal.log10(Decimal.log10(Decimal.log10(player.i.time.add(10)).add(10)).add(10))).add(1).times(mult).pow(exp)
                     }
                 } else {
-                    return Decimal.log2(Decimal.log10(Decimal.log10(player.v.points.add(10)).add(10)).add(2)).add(1)
+                    return Decimal.log2(Decimal.log10(Decimal.log10(player.v.points.add(10)).add(10)).add(2)).add(1).times(mult).pow(exp)
                 }
             } else {
-                return new Decimal(1)
+                return new Decimal(1).times(mult).pow(exp)
             }
         }
     },
@@ -120,33 +122,42 @@ addLayer("sf", {
         },
     },
 
+    doReset(resettingLayer) {
+		let keep = [];
+        if (hasMilestone('u', 2) && resettingLayer == 'u') keep.push("milestones");
+        if (hasMilestone('u', 2) && resettingLayer == 'u') keep.push("upgrades");
+		if (layers[resettingLayer].row > this.row) layerDataReset(this.layer, keep);
+	},
+
     milestones: {
         0: {
             requirementDescription: "1 space fragment",
             effectDescription: "Unlock a new tab, exponential growth without the 1st number upgrade, and keep the number limit broken on all resets.",
-            done() { return player.sf.points.gte(1) }
+            done() { return player.sf.points.gte(1) || hasMilestone('u', 2) }
         },
         1: {
             requirementDescription: "2 space fragment",
             effectDescription: "Keep black hole challenges and velocity buyable on reset.",
-            done() { return player.sf.points.gte(2) },
-            unlocked() {return hasUpgrade('sf', 53)}
+            done() { return player.sf.points.gte(2) || hasMilestone('u', 2) },
+            unlocked() {return hasUpgrade('sf', 53) || hasMilestone('u', 2)}
         },
         2: {
             requirementDescription: "3 space fragment",
             effectDescription: "Unlock Missing Star Fragment Upgrades and a new tab.",
-            done() { return player.sf.points.gte(3) },
-            unlocked() {return hasUpgrade('sf', 53)}
+            done() { return player.sf.points.gte(3) || hasMilestone('u', 2) },
+            unlocked() {return hasUpgrade('sf', 53) || hasMilestone('u', 2)}
         },
         3: {
             requirementDescription: "5 space fragment",
             effectDescription: "Keep black hole upgrades, velocity upgrades and energy buyables on reset.",
-            done() { return player.sf.points.gte(5) },
-            unlocked() {return hasUpgrade('sf', 53)}
+            done() { return player.sf.points.gte(5) || hasMilestone('u', 2) },
+            unlocked() {return hasUpgrade('sf', 53) || hasMilestone('u', 2)}
         },
     },
 
     upgrades: {
+        rows: 5,
+		cols: 5,
         11: {
             fullDisplay() {
                 return "<b>Missing Fragment N-11</b><br>This is solely for fragment progression.<br><br>Cost: e1.000e50 number"
@@ -176,10 +187,10 @@ addLayer("sf", {
                 return "<b>Simple Boost</b><br>Infinity boost x10, which is not affected by cap.<br><br>Cost: 1e20 number"
             },
             canAfford() {
-                return player.points >= 1e20
+                return player.points >= 1e20 || hasMilestone('u', 2)
             },
             pay() {
-                return player.points = player.points.div(1e20)
+                if (!hasMilestone('u', 2)) return player.points = player.points.div(1e20)
             },
             unlocked() {return hasMilestone('sf', 0)}
         },
@@ -224,10 +235,10 @@ addLayer("sf", {
                 return "<b>More Infinities</b><br>Infinity gain x1,000,000<br><br>Cost: 100,000 infinity"
             },
             canAfford() {
-                return player.i.points >= 1e5
+                return player.i.points >= 1e5 || hasMilestone('u', 2)
             },
             pay() {
-                return player.i.points = player.i.points.sub(1e5)
+                if (!hasMilestone('u', 2)) return player.i.points = player.i.points.sub(1e5)
             },
             unlocked() {return hasUpgrade('sf', 23)}
         },
@@ -236,10 +247,10 @@ addLayer("sf", {
                 return "<b>Small Yet Immediate</b><br>Infinity gain x1,000<br><br>Cost: 1 infinity"
             },
             canAfford() {
-                return player.i.points >= 1
+                return player.i.points >= 1 || hasMilestone('u', 2)
             },
             pay() {
-                return player.i.points = player.i.points.sub(1)
+                if (!hasMilestone('u', 2)) return player.i.points = player.i.points.sub(1)
             },
             unlocked() {return hasUpgrade('sf', 13)}
         },
@@ -248,10 +259,10 @@ addLayer("sf", {
                 return "<b>Early Machines</b><br>Machine gain x7<br><br>Cost: 1.00e20 infinity"
             },
             canAfford() {
-                return player.i.points >= 1e20
+                return player.i.points >= 1e20 || hasMilestone('u', 2)
             },
             pay() {
-                return player.i.points = player.i.points.sub(1e20)
+                if (!hasMilestone('u', 2)) return player.i.points = player.i.points.sub(1e20)
             },
             unlocked() {return hasUpgrade('sf', 23)}
         },
@@ -272,10 +283,10 @@ addLayer("sf", {
                 return "<b>Energy Specify</b><br>Make the energy formula better.<br><br>Cost: 1,000,000 energy"
             },
             canAfford() {
-                return player.e.points >= 1e6
+                return player.e.points >= 1e6 || hasMilestone('u', 2)
             },
             pay() {
-                return player.e.points = player.e.points.sub(1e6)
+                if (!hasMilestone('u', 2)) return player.e.points = player.e.points.sub(1e6)
             },
             unlocked() {return hasUpgrade('sf', 32)}
         },
@@ -284,10 +295,10 @@ addLayer("sf", {
                 return "<b>Time Warping</b><br>Velocity Milestone 4 is x5e295 better.<br><br>Cost: 3 velocity"
             },
             canAfford() {
-                return player.v.points >= 3
+                return player.v.points >= 3 || hasMilestone('u', 2)
             },
             pay() {
-                return player.v.points = player.v.points.sub(3)
+                if (!hasMilestone('u', 2)) return player.v.points = player.v.points.sub(3)
             },
             unlocked() {return hasUpgrade('sf', 33) && hasUpgrade('sf', 22)}
         },
@@ -296,10 +307,10 @@ addLayer("sf", {
                 return "<b>Starting Resources</b><br>Infinity gain x1e40, Time gain x1,000 and Unlock Velocity Milestones 1-4 automatically.<br><br>Cost: 1.00e40 infinity"
             },
             canAfford() {
-                return player.i.points >= 1e20
+                return player.i.points >= 1e20 || hasMilestone('u', 2)
             },
             pay() {
-                return player.i.points = player.i.points.sub(1e20)
+                if (!hasMilestone('u', 2)) return player.i.points = player.i.points.sub(1e20)
             },
             unlocked() {return hasUpgrade('sf', 23)}
         },
@@ -308,10 +319,10 @@ addLayer("sf", {
                 return "<b>Speedy Automation</b><br>Unlock auto-velocity, also time gain ^1.2.<br><br>Cost: 100 velocity"
             },
             canAfford() {
-                return player.v.points >= 15
+                return player.v.points >= 15 || hasMilestone('u', 2)
             },
             pay() {
-                return player.v.points = player.v.points.sub(15)
+                if (!hasMilestone('u', 2)) return player.v.points = player.v.points.sub(15)
             },
             unlocked() {return hasUpgrade('sf', 33) && hasUpgrade('sf', 24)}
         },
@@ -320,10 +331,10 @@ addLayer("sf", {
                 return "<b>Dependent Generation</b><br>When online, generate velocity according to last velocity reset gain.<br><br>Cost: 1.00e9 velocity"
             },
             canAfford() {
-                return player.v.points >= 1e9
+                return player.v.points >= 1e9 || hasMilestone('u', 2)
             },
             pay() {
-                return player.v.points = player.v.points.sub(1e9)
+                if (!hasMilestone('u', 2)) return player.v.points = player.v.points.sub(1e9)
             },
             unlocked() {return hasUpgrade('sf', 34)}
         },
@@ -344,10 +355,10 @@ addLayer("sf", {
                 return "<b>Advanced Formula</b><br>Unlock Black Hole Milestones automatically, and makes Velocity Buyable 2 better.<br><br>Cost: 2,000,000 velocity"
             },
             canAfford() {
-                return player.v.points >= 2e6
+                return player.v.points >= 2e6 || hasMilestone('u', 2)
             },
             pay() {
-                return player.v.points = player.v.points.sub(2e6)
+                if (!hasMilestone('u', 2)) return player.v.points = player.v.points.sub(2e6)
             },
             unlocked() {return hasUpgrade('sf', 43) && hasUpgrade('sf', 32)}
         },
@@ -356,10 +367,10 @@ addLayer("sf", {
                 return "<b>White Holes</b><br>Infinity gain x1e2000, and each Black Hole Challenge gives a ^2 boost to Number gain.<br><br>Cost: 200,000 velocity"
             },
             canAfford() {
-                return player.v.points >= 200000
+                return player.v.points >= 200000 || hasMilestone('u', 2)
             },
             pay() {
-                return player.v.points = player.v.points.sub(200000)
+                if (!hasMilestone('u', 2)) return player.v.points = player.v.points.sub(200000)
             },
             unlocked() {return hasUpgrade('sf', 33)}
         },
@@ -368,10 +379,10 @@ addLayer("sf", {
                 return "<b>Wormholes Connection</b><br>Increase Energy gain by Black Hole if you have 'Energy Specify'.<br><br>Cost: 180 black hole"
             },
             canAfford() {
-                return player.bl.points >= 180
+                return player.bl.points >= 180 || hasMilestone('u', 2)
             },
             pay() {
-                return player.bl.points = player.bl.points.sub(180)
+                if (!hasMilestone('u', 2)) return player.bl.points = player.bl.points.sub(180)
             },
             unlocked() {return hasUpgrade('sf', 43) && hasUpgrade('sf', 34)}
         },
@@ -416,10 +427,10 @@ addLayer("sf", {
                 return "<b>FRAGMENT COMPLETION</b><br>Finish the fragment.<br><br>Cost: 1.00e200 velocity"
             },
             canAfford() {
-                return player.v.points >= 1e200
+                return player.v.points >= 1e200 || hasMilestone('u', 2)
             },
             pay() {
-                return player.v.points = player.v.points.sub(1e200)
+                if (!hasMilestone('u', 2)) return player.v.points = player.v.points.sub(1e200)
             },
             unlocked() {return hasUpgrade('sf', 33)}
         },
