@@ -19,7 +19,7 @@ addLayer("e", {
     type: "custom", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
     getResetGain() {
         exp = decimalOne
-        if (player.d.dilating && hasUpgrade('d', 11)) exp = Decimal.log10(player.g.electron.pow(0.5))
+        if ((player.d.dilating || hasUpgrade('si', 14)) && hasUpgrade('d', 11)) exp = Decimal.log10(player.g.electron.pow(0.5).add(10))
         if (hasUpgrade('sf', 31)) {
             if (hasUpgrade('sf', 44)) {
                 mult = decimalOne
@@ -34,7 +34,7 @@ addLayer("e", {
     },
     getNextAt() {
         exp = decimalOne
-        if (player.d.dilating) exp = Decimal.log10(player.g.electron.pow(0.5))
+        if ((player.d.dilating || hasUpgrade('si', 14)) && hasUpgrade('d', 11)) exp = Decimal.log10(player.g.electron.pow(0.5).add(10))
         if (hasUpgrade('sf', 31)) {
             if (hasUpgrade('sf', 44)) {
                 mult = decimalOne

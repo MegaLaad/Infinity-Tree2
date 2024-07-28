@@ -33,10 +33,10 @@ addLayer("g", {
                     if (hasUpgrade('g', 11)) {
                         if (!isNaN(Decimal.log10(player.g.quarks.add(10)).add(10))) mult = Decimal.pow(2, Decimal.log10(player.g.quarks.add(10)).add(1))
                     }
-                    if (hasUpgrade('g', 12)) {
-                        gain = Decimal.log2(Decimal.log10(Decimal.log10(player.e.points.add(10)).add(10)).times(Decimal.pow(1.8, Decimal.log10(player.sf.points.add(10)).pow(0.95))).add(2)).sub(7).add(Decimal.log2(Decimal.log10(player.g.electron.add(10)).add(2))).times(mult).times(player.g.points.pow(0.5).add(1))
+                    if (hasUpgrade('g', 12) && !player.g.points.gte(new Decimal("ee16"))) {
+                        gain = Decimal.log2(Decimal.log10(Decimal.log10(player.e.points.add(10)).add(10)).times(Decimal.pow(1.8, Decimal.log10(player.sf.points.add(10)).pow(0.95))).add(2)).sub(7).add(Decimal.log2(Decimal.log10(player.g.electron.add(10)).add(2))).times(mult).times(player.g.points.root(2).add(1))
                     } else {
-                        gain = Decimal.log2(Decimal.log10(Decimal.log10(player.e.points)).times(Decimal.pow(1.8, Decimal.log10(player.sf.points.add(10)).pow(0.95))).add(2)).sub(7).add(Decimal.log2(Decimal.log10(player.g.electron.add(10)).add(2))).times(mult)
+                        gain = Decimal.log2(Decimal.log10(Decimal.log10(player.e.points.add(10)).add(10)).times(Decimal.pow(1.8, Decimal.log10(player.sf.points.add(10)).pow(0.95))).add(2)).sub(7).add(Decimal.log2(Decimal.log10(player.g.electron.add(10)).add(2))).times(mult)
                     }
                 } else {
                     gain = Decimal.log2(Decimal.log10(Decimal.log10(player.e.points.add(10)).add(10)).times(Decimal.log2(player.sf.points.add(2)).pow(1.4)).add(2)).sub(7).add(Decimal.log2(Decimal.log10(player.g.electron.add(10)).add(2)))
@@ -45,7 +45,7 @@ addLayer("g", {
                 gain = Decimal.log2(Decimal.log10(Decimal.log10(player.e.points.add(10)).add(10)).add(2)).sub(7).add(Decimal.log2(Decimal.log10(player.g.electron.add(10)).add(2)))
             }
         } else {
-            gain = Decimal.log2(Decimal.log10(Decimal.log10(player.e.points.add(10)).add(10))).sub(7)
+            gain = Decimal.log2(Decimal.log10(Decimal.log10(player.e.points.add(10)).add(10)).add(2)).sub(7)
         }
 
         if (!isNaN(gain) && gain.gte(1)) return gain.times(mult).pow(exp)
@@ -97,6 +97,7 @@ addLayer("g", {
     doReset(resettingLayer) {
 		let keep = [];
         if (hasMilestone('u', 3)) keep.push("milestones");
+        if (hasMilestone('si', 2)) keep.push("upgrades");
 		if (layers[resettingLayer].row > this.row) layerDataReset(this.layer, keep);
 	},
 

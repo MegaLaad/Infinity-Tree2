@@ -18,8 +18,8 @@ addLayer("d", {
     baseAmount() { return player.v.points },  // A function to return the current amount of baseResource.
     type: "custom", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
     getResetGain() {
-        velFormula = Decimal.log10(Decimal.log10(Decimal.log10(player.v.points)))
-        if (hasMilestone('d', 2)) velFormula = Decimal.ln(Decimal.log10(Decimal.log10(player.v.points))).div(Decimal.ln(5))
+        velFormula = Decimal.log10(Decimal.log10(Decimal.log10(player.v.points.add(10)).add(10)).add(10))
+        if (hasMilestone('d', 2)) velFormula = Decimal.ln(Decimal.log10(Decimal.log10(player.v.points.add(10)).add(5)).add(10)).div(Decimal.ln(5))
 
         gain = Decimal.floor(velFormula.sub(1).sub(player.d.points))
 
@@ -41,11 +41,26 @@ addLayer("d", {
     row: 3, // Row the layer is in on the tree (0 is the first row)
     layerShown(){return true},
 
-    update() {
-        gain = Decimal.log10(player.v.points).times(Decimal.log10(player.e.points)).pow(0.2)
-        if (hasUpgrade('d', 13) && player.d.dilateSpent.gte(2)) gain = gain.pow(Decimal.log2(player.d.dilateSpent.add(1)))
+    doReset(resettingLayer) {
+		let keep = [];
+        if (hasMilestone('si', 2)) keep.push("milestones");
+        if (hasMilestone('si', 2)) keep.push("upgrades");
+		if (layers[resettingLayer].row > this.row) layerDataReset(this.layer, keep);
+	},
 
-        if (player.d.dilating) player.d.relativityGain = gain
+    update() {
+        gain = Decimal.log10(player.v.points.add(10)).times(Decimal.log10(player.e.points.add(10))).pow(0.2)
+        if (hasUpgrade('d', 13)) {
+            if (hasUpgrade('si', 14)) {
+                if (player.d.points.gte(2)) gain = gain.pow(Decimal.log2(player.d.points.add(1)))
+            } else {
+                if (player.d.dilateSpent.gte(2)) gain = gain.pow(Decimal.log2(player.d.dilateSpent.add(1)))
+            }
+        }
+
+        if (isNaN(gain)) gain = decimalZero
+
+        if (player.d.dilating || hasUpgrade('si', 14)) player.d.relativityGain = gain
         else player.d.relativityGain = decimalZero
 
         if (hasMilestone('u', 5)) player.d.relativity = player.d.relativity.add(player.d.relativityGain.times(0.1))
@@ -59,6 +74,13 @@ addLayer("d", {
                 ["display-text",
                     function() { return 'You have '+format(player.v.points)+" velocity" }
                 ],
+                ["display-text",
+                    function() { return "(You need at least e1.000e100 velocity for the prestige button to work)" }, {"color": "#467464"}
+                ], "blank",
+                ["toggle", ["d", "auto"]],
+                ["display-text",
+                    function() { return '(Get a specific milestone to unlock the auto-buyer toggle above)' }
+                ], "blank",
                 "milestones", "blank"
             ]
         },
@@ -102,7 +124,8 @@ addLayer("d", {
                 return decimalZero
             },
             display() {
-                dilationDesc = "Gaining <b>"+format(player.d.relativityGain)+" relativity</b> after ending this dilation. (According to velocity and energy)<br><br>(Dilating perform a 'star fragment', 'generators' and 'space' reset)"
+                dilationGain = "Gaining <b>"+format(player.d.relativityGain)+" relativity</b> after ending this dilation. (According to velocity and energy)<br><br>"
+                dilationDesc = "(Dilating perform a 'star fragment', 'generators' and 'space' reset)"
                 cost = decimalOne
                 if (hasUpgrade('d', 13)) cost = player.d.points
                 if (!(cost.gte(1))) cost = decimalOne
@@ -111,12 +134,12 @@ addLayer("d", {
                 if (hasUpgrade('d', 13) && cost.gte(2)) multiBuy = " (Multi-Buy)"
 
                 if (!player.d.dilating) {
-                    return "<b>START TIME DILATION</b><br>Cost: "+format(cost)+multiBuy+" dilation<br><br>"+dilationDesc
+                    return "<b>START TIME DILATION</b><br>Cost: "+format(cost)+multiBuy+" dilation<br><br>"+dilationGain+dilationDesc
                 } else {
                     if (hasUpgrade('d', 13)) {
-                        return "<b>END TIME DILATION</b><br>Spent: "+format(player.d.dilateSpent)+" dilation<br><br>"+dilationDesc
+                        return "<b>END TIME DILATION</b><br>Spent: "+format(player.d.dilateSpent)+" dilation<br><br>"+dilationGain+dilationDesc
                     } else {
-                        return "<b>END TIME DILATION</b><br><br>"+dilationDesc
+                        return "<b>END TIME DILATION</b><br><br>"+dilationGain+dilationDesc
                     }
                 }
             },
@@ -169,7 +192,7 @@ addLayer("d", {
         },
         13: {
             fullDisplay() {
-                return "<b>Time Warp</b><br>You can spend more than 1 dilation on a time dilation, leading to more relativity gain.<br><br>Cost: 400,000 relativity"
+                return "<b>Time Warp</b><br>You can spend more than 1 dilation on a time dilation, leading to more relativity gain. (Hardcap at ee16)<br><br>Cost: 400,000 relativity"
             },
             canAfford() {
                 return player.d.relativity.gte(new Decimal("400,000"))
@@ -183,4 +206,7 @@ addLayer("d", {
     hotkeys: [
         {key: "d", description: "D: Reset for dilation", onPress(){if (canReset(this.layer)) doReset(this.layer)}},
     ],
+
+    autoPrestige() { return player.d.auto && hasMilestone('si', 3) },
+    resetsNothing() { return hasMilestone('si', 3) },
 })

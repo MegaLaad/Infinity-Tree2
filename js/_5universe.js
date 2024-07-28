@@ -1,4 +1,5 @@
 unlocked = false
+freeLevel = 0
 
 addLayer("u", {
     name: "universe", // This is optional, only used in a few places, If absent it just uses the layer id.
@@ -22,21 +23,38 @@ addLayer("u", {
     effectDescription() { 
         return "with "+format(player.u.points.add(player.u.buyableSpent))+" universes total."
     },
-    getResetGain() {
+    getResetGain(canMax) {
         gain = Decimal.floor(Decimal.ln(Decimal.log10(player.s.points.add(10)).add(26)).div(Decimal.ln(26))).sub(player.u.points).sub(player.u.buyableSpent)
-        if (!isNaN(gain) && gain.gte(1) && player.s.points.gte(1e26)) return gain
+        if (hasMilestone('si', 1)) {
+            gain = Decimal.floor(Decimal.ln(Decimal.log10(player.s.points.add(10)).add(20)).div(Decimal.ln(20))).sub(player.u.points).sub(player.u.buyableSpent)
+            if (hasUpgrade('si', 13)) {
+                gain = Decimal.floor(Decimal.ln(Decimal.log10(player.s.points.add(10)).times(Decimal.log2(player.si.layer.add(2))).add(20)).div(Decimal.ln(20))).sub(player.u.points).sub(player.u.buyableSpent)
+            }
+        } 
+        if (!isNaN(gain) && gain.gte(1) && player.s.points.gte(1e26)) {
+            if (canMax) return gain
+            else return decimalOne
+        }
         else return decimalZero
     },
-    getNextAt() {
-        nextAt = Decimal.pow(10, Decimal.pow(26, getResetGain(this.layer).add(1).add(player.u.points).add(player.u.buyableSpent)))
+    getNextAt(canMax) {
+        resetGain = getResetGain(this.layer).add(1).min(1)
+        if (canMax) resetGain = getResetGain(this.layer).add(1)
+        nextAt = Decimal.pow(10, Decimal.pow(26, resetGain.add(player.u.points).add(player.u.buyableSpent)))
+        if (hasMilestone('si', 1)) {
+            nextAt = Decimal.pow(10, Decimal.pow(20, resetGain.add(player.u.points).add(player.u.buyableSpent)))
+            if (hasUpgrade('si', 13)) {
+                nextAt = Decimal.pow(10, Decimal.pow(20, resetGain.add(player.u.points).add(player.u.buyableSpent)).div(Decimal.log2(player.si.layer)))
+            }
+        } 
         return nextAt
     },
     canReset() {
         return getResetGain(this.layer).gte(1)
     },
     prestigeButtonText() {
-        if (!getResetGain(this.layer).gte(100)) return "Reset for +"+format(getResetGain(this.layer))+" universe<br><br>"+format(player.s.points)+" / "+format(getNextAt(this.layer))+" space"
-        else return "Reset for +"+format(getResetGain(this.layer))+" universe"
+        if (!getResetGain(this.layer).gte(100)) return "Sacrifise your space to gain "+format(getResetGain(this.layer))+" universe<br><br>Next: "+format(player.s.points)+" / "+format(getNextAt(this.layer))+" space"
+        else return "Sacrifise your space to gain "+format(getResetGain(this.layer))+" universe"
     },
     row: 4, // Row the layer is in on the tree (0 is the first row)
     layerShown(){return true},
@@ -45,11 +63,19 @@ addLayer("u", {
         if (player.u.points.add(player.u.buyableSpent).gte(1)) {
             unlocked = true
         }
+
+        if (hasUpgrade('si', 21)) freeLevel = new Decimal(2)
     },
 
     doReset(resettingLayer) {
 		let keep = ["milestones"];
+        if (hasMilestone('si', 2)) keep.push("upgrades");
 		if (layers[resettingLayer].row > this.row) layerDataReset(this.layer, keep);
+        setBuyableAmount(this.layer, 11, new Decimal(freeLevel))
+        setBuyableAmount(this.layer, 12, new Decimal(freeLevel))
+        setBuyableAmount(this.layer, 13, new Decimal(freeLevel))
+        setBuyableAmount(this.layer, 21, new Decimal(freeLevel))
+        setBuyableAmount(this.layer, 22, new Decimal(freeLevel))
 	},
  
     tabFormat: {
@@ -59,6 +85,13 @@ addLayer("u", {
                 "prestige-button", "blank",
                 ["display-text",
                     function() { return 'You have '+format(player.s.points)+" space" }
+                ], 
+                ["display-text",
+                    function() { return "(You need at least 1.00e26 space for the prestige button to work)" }, {"color": "#534FE7"}
+                ], "blank",
+                ["toggle", ["u", "auto"]],
+                ["display-text",
+                    function() { return '(Get a specific milestone to unlock the auto-buyer toggle above)' }
                 ], "blank",
                 "milestones", "blank"
             ]
@@ -119,11 +152,11 @@ addLayer("u", {
         respec() { // Optional, reset things and give back your currency. Having this function makes a respec button appear
             player.u.points = player.u.points.add(player.u.buyableSpent)
             player.u.buyableSpent = new Decimal(0)
-            setBuyableAmount(this.layer, 11, new Decimal(0))
-            setBuyableAmount(this.layer, 12, new Decimal(0))
-            setBuyableAmount(this.layer, 13, new Decimal(0))
-            setBuyableAmount(this.layer, 21, new Decimal(0))
-            setBuyableAmount(this.layer, 22, new Decimal(0))
+            setBuyableAmount(this.layer, 11, new Decimal(freeLevel))
+            setBuyableAmount(this.layer, 12, new Decimal(freeLevel))
+            setBuyableAmount(this.layer, 13, new Decimal(freeLevel))
+            setBuyableAmount(this.layer, 21, new Decimal(freeLevel))
+            setBuyableAmount(this.layer, 22, new Decimal(freeLevel))
         },
         respecMessage: "Are you sure you want to respec?",
         11: {
@@ -230,4 +263,6 @@ addLayer("u", {
     hotkeys: [
         {key: "u", description: "U: Reset for universe", onPress(){if (canReset(this.layer)) doReset(this.layer)}},
     ],
+
+    autoPrestige() { return (player.u.auto && hasMilestone("si", 4)) },
 })

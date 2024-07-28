@@ -60,6 +60,8 @@ addLayer("bl", {
         if (getBuyableAmount('v', 22) > 0) {
             unlockedBlack = 1;
         }
+
+        if (hasUpgrade('si', 12) && !player.bl.points.gte(1000)) player.bl.points = new Decimal(1001)
     },
 
     doReset(resettingLayer) {
@@ -91,7 +93,8 @@ addLayer("bl", {
         2: {
             requirementDescription: "8 black holes",
             effectDescription: "Black Hole resets nothing.",
-            done() { return (player.bl.points.gte(8) && hasChallenge('bl', 21)) || hasUpgrade('sf', 42) || hasMilestone('u', 1) }
+            done() { return (player.bl.points.gte(8) && hasChallenge('bl', 21)) || hasUpgrade('sf', 42) || hasMilestone('u', 1) },
+            unlocked() {return hasChallenge('bl', 21)}
         },
     },
 

@@ -21,7 +21,7 @@ addLayer("s", {
     getResetGain() {
         gain = player.bl.points.div(1000)
 
-        if (hasUpgrade('d', 12) && player.d.dilating) gain = gain.times(player.d.relativityGain.pow(0.9))
+        if (hasUpgrade('d', 12) && (player.d.dilating || hasUpgrade('si', 14))) gain = gain.times(player.d.relativityGain.pow(0.9))
 
         if (!isNaN(gain) && gain.gte(1)) return gain
         else return decimalZero
