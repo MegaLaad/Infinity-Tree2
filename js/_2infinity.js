@@ -201,8 +201,8 @@ addLayer("i", {
                 setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
             },
             purchaseLimit: 10,
+            unlocked() {return getBuyableAmount('s', 12).gte(1)}
         },
-        unlocked() {return getBuyableAmount('s', 12).gte(1)}
     },
 
     passiveGeneration() { return (hasUpgrade("i", 22))?1:0 },
