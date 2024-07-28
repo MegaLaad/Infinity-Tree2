@@ -16,7 +16,7 @@ addLayer("s", {
     effectDescription() { 
         mult = new Decimal(100)
         if (hasMilestone('u', 4)) mult = mult.times(100)
-        return "which are generating "+format(Decimal.min(player.s.points, 1e19).times(mult))+" / "+format(mult.times(1e19))+" black hole per second when online."
+        return "which are generating "+format(Decimal.min(player.s.points, 1e19).times(mult))+" / "+format(mult.times(1e19))+" black hole per second."
     },
     getResetGain() {
         gain = player.bl.points.div(1000)

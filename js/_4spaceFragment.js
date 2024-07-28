@@ -468,7 +468,7 @@ addLayer("sf", {
         },
         row2: {
             title: "Row 2 Completion",
-            body() { return "Number grow double exponentially when online." },
+            body() { return "Number grow double exponentially." },
             unlocked() {return hasUpgrade('sf', 21) && hasUpgrade('sf', 22) && hasUpgrade('sf', 23) && hasUpgrade('sf', 24) && hasUpgrade('sf', 25)}
         },
         row4: {
@@ -498,7 +498,7 @@ addLayer("sf", {
         },
         column5: {
             title: "Column 5 Completion",
-            body() { return "Generate machine depending on star fragment when online." },
+            body() { return "Generate machine depending on star fragment." },
             unlocked() {return hasUpgrade('sf', 15) && hasUpgrade('sf', 25) && hasUpgrade('sf', 35) && hasUpgrade('sf', 45) && hasUpgrade('sf', 55)}
         },
     },

@@ -91,7 +91,7 @@ addLayer("n", {
     upgrades: {
         11: {
             fullDisplay() {
-                return "<b>Exponential Growth</b><br>Number grow exponentially when online.<br><br>Cost: 10 number"
+                return "<b>Exponential Growth</b><br>Number grow exponentially.<br><br>Cost: 10 number"
             },
             canAfford() {
                 return player.points >= 10
