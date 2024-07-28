@@ -96,7 +96,7 @@ addLayer("g", {
 
     doReset(resettingLayer) {
 		let keep = [];
-        if (hasMilestone('u', 3) && resettingLayer == 'u') keep.push("milestones");
+        if (hasMilestone('u', 3)) keep.push("milestones");
 		if (layers[resettingLayer].row > this.row) layerDataReset(this.layer, keep);
 	},
 
@@ -249,10 +249,10 @@ addLayer("g", {
         },
         14: {
             fullDisplay() {
-                return "<b>Over And Over</b><br>Increase Star Fragment gain by Generator.<br><br>Cost: 1.00e10 quarks"
+                return "<b>Over And Over</b><br>Increase Star Fragment gain by Generator.<br><br>Cost: 1.00e10 quarks<br>Requirement: 1.00 total universe"
             },
             canAfford() {
-                return player.g.quarks >= 1e10
+                return player.g.quarks.gte(1e10) && player.u.points.add(player.u.buyableSpent).gte(1)
             },
             pay() {
                 return player.g.quarks = player.g.quarks.sub(1e10)

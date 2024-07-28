@@ -1,3 +1,5 @@
+unlocked = false
+
 addLayer("u", {
     name: "universe", // This is optional, only used in a few places, If absent it just uses the layer id.
     symbol: "U", // This appears on the layer's node. Default is the id with the first letter capitalized
@@ -9,7 +11,7 @@ addLayer("u", {
     }},
     color: "#534FE7",
     nodeStyle() {return {
-        "background": "radial-gradient(#0000FF, #A020F0)",
+        "background": (player.si.unlocked)?"radial-gradient(#0000FF, #A020F0)":"#bf8f8f" ,
     }},
     branches: ['sf', 's', 'd', 'g'],
     requires: new Decimal(1e26),
@@ -22,7 +24,7 @@ addLayer("u", {
     },
     getResetGain() {
         gain = Decimal.floor(Decimal.ln(Decimal.log10(player.s.points.add(10)).add(26)).div(Decimal.ln(26))).sub(player.u.points).sub(player.u.buyableSpent)
-        if (!isNaN(gain) && gain.gte(1)) return gain
+        if (!isNaN(gain) && gain.gte(1) && player.s.points.gte(1e26)) return gain
         else return decimalZero
     },
     getNextAt() {
@@ -38,6 +40,17 @@ addLayer("u", {
     },
     row: 4, // Row the layer is in on the tree (0 is the first row)
     layerShown(){return true},
+
+    update() {
+        if (player.u.points.add(player.u.buyableSpent).gte(1)) {
+            unlocked = true
+        }
+    },
+
+    doReset(resettingLayer) {
+		let keep = ["milestones"];
+		if (layers[resettingLayer].row > this.row) layerDataReset(this.layer, keep);
+	},
  
     tabFormat: {
         "Main": {
@@ -67,37 +80,37 @@ addLayer("u", {
             requirementDescription: "1 velocity",
             effectDescription: "Get all velocity milestones and keep them on reset, and unlock auto-velocity early.",
             done() { return player.v.points.gte(1) },
-            unlocked() {return player.u.unlocked}
+            unlocked() {return unlocked}
         },
         1: {
             requirementDescription: "1 black hole",
             effectDescription: "Get all black hole milestones and keep them on reset, and unlock auto-velocity early.",
             done() { return player.bl.points.gte(1) },
-            unlocked() {return player.u.unlocked}
+            unlocked() {return unlocked}
         },
         2: {
             requirementDescription: "1 star fragment",
             effectDescription: "Get all star fragment milestones, make all non-missing upgrades affordable and keep them on reset.",
             done() { return player.sf.points.gte(1) },
-            unlocked() {return player.u.unlocked}
+            unlocked() {return unlocked}
         },
         3: {
             requirementDescription: "1 electron",
             effectDescription: "Get all generators milestones and keep them on reset.",
             done() { return player.g.electron.gte(1) },
-            unlocked() {return player.u.unlocked}
+            unlocked() {return unlocked}
         },
         4: {
             requirementDescription: "1 space",
             effectDescription: "Get all space milestones and keep them on reset, and space boost is 100x better",
             done() { return player.sf.points.gte(1) },
-            unlocked() {return player.u.unlocked}
+            unlocked() {return unlocked}
         },
         5: {
             requirementDescription: "1e100 relativity gain",
-            effectDescription: "Gain 100% of relativity every second.",
+            effectDescription: "Gain relativity depending on relativity gain.",
             done() { return player.d.relativityGain.gte(1e100) },
-            unlocked() {return player.u.unlocked}
+            unlocked() {return unlocked}
         },
     },
 
@@ -152,7 +165,7 @@ addLayer("u", {
         },
         21: {
             cost(x) { return decimalOne },
-            title: "Mutation Universe",
+            title: "Fragmentation Universe",
             display() { return "<b>[STAR FRAGMENT BOOSTER]</b><br><br>Multiply gain by "+format(Decimal.pow(10, getBuyableAmount(this.layer, this.id).times(2).pow(3)))+", exponent gain by "+format(Decimal.pow(1.1, getBuyableAmount(this.layer, this.id)))+".<br><br>Cost: "+format(player.u.points)+" / "+format(this.cost(getBuyableAmount(this.layer, this.id)))+" universe<br>Bought: "+Decimal.floor(format(getBuyableAmount(this.layer, this.id))) },
             canAfford() { return player.u.points.gte(this.cost()) },
             buy() {
@@ -203,7 +216,7 @@ addLayer("u", {
         },
         13: {
             fullDisplay() {
-                return "Unlock Production Universe.<br><br>Cost: 1e10 generators"
+                return "Unlock Production Universe.<br><br>Cost: 1.00e10 generators"
             },
             canAfford() {
                 return player.g.points.gte(new Decimal("1e10"))

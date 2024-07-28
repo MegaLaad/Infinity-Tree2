@@ -157,7 +157,7 @@ addLayer("v", {
         
 		let keep = [];
         if (hasUpgrade('sf', 53)) keep.push("milestones");
-        if (hasMilestone('u', 0) && resettingLayer == 'u') keep.push("milestones");
+        if (hasMilestone('u', 0)) keep.push("milestones");
         if (hasMilestone('sf', 1) && resettingLayer == 'sf') keep.push("buyables");
         if (hasMilestone('sf', 2) && resettingLayer == 'sf') keep.push("upgrades");
         if (hasMilestone('g', 2)) keep.push("buyables");

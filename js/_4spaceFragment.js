@@ -124,8 +124,8 @@ addLayer("sf", {
 
     doReset(resettingLayer) {
 		let keep = [];
-        if (hasMilestone('u', 2) && resettingLayer == 'u') keep.push("milestones");
-        if (hasMilestone('u', 2) && resettingLayer == 'u') keep.push("upgrades");
+        if (hasMilestone('u', 2)) keep.push("milestones");
+        if (hasMilestone('u', 2)) keep.push("upgrades");
 		if (layers[resettingLayer].row > this.row) layerDataReset(this.layer, keep);
 	},
 

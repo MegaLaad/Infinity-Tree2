@@ -48,7 +48,7 @@ addLayer("d", {
         if (player.d.dilating) player.d.relativityGain = gain
         else player.d.relativityGain = decimalZero
 
-        if (hasMilestone('u', 5)) player.d.relativity = player.d.relativity.add(player.d.relativityGain.times(10))
+        if (hasMilestone('u', 5)) player.d.relativity = player.d.relativity.add(player.d.relativityGain.times(0.1))
     },
  
     tabFormat: {
@@ -92,7 +92,7 @@ addLayer("d", {
         2: {
             requirementDescription: "300,000 relativity",
             effectDescription: "Make the dilation formula better.",
-            done() { return player.d.relativity.gte(3e5) }
+            done() { return player.d.relativity.gte(300000) }
         },
     },
 
@@ -158,24 +158,24 @@ addLayer("d", {
         },
         12: {
             fullDisplay() {
-                return "<b>Space Terminal</b><br>When dilating, space gain is boosted by relativity gain.<br><br>Cost: 2,500 relativity"
+                return "<b>Space Terminal</b><br>When dilating, space gain is boosted by relativity gain.<br><br>Cost: 20,000 relativity"
             },
             canAfford() {
-                return player.d.relativity.gte(new Decimal("2500"))
+                return player.d.relativity.gte(new Decimal("20,000"))
             },
             pay() {                       
-                return player.d.relativity = player.d.relativity.div(new Decimal("2500"))
+                return player.d.relativity = player.d.relativity.div(new Decimal("20,000"))
             },
         },
         13: {
             fullDisplay() {
-                return "<b>Time Warp</b><br>You can spend more than 1 dilation on a time dilation, leading to more relativity gain.<br><br>Cost: 7,500 relativity"
+                return "<b>Time Warp</b><br>You can spend more than 1 dilation on a time dilation, leading to more relativity gain.<br><br>Cost: 400,000 relativity"
             },
             canAfford() {
-                return player.d.relativity.gte(new Decimal("7500"))
+                return player.d.relativity.gte(new Decimal("400,000"))
             },
             pay() {
-                return player.d.relativity = player.d.relativity.div(new Decimal("7500"))
+                return player.d.relativity = player.d.relativity.div(new Decimal("400,000"))
             },
         },
     },

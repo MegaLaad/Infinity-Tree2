@@ -69,7 +69,7 @@ addLayer("s", {
 
     doReset(resettingLayer) {
 		let keep = ["buyables"];
-        if (hasMilestone('u', 4) && resettingLayer == 'u') keep.push("milestones");
+        if (hasMilestone('u', 4)) keep.push("milestones");
 		if (layers[resettingLayer].row > this.row) layerDataReset(this.layer, keep);
 	},
 
