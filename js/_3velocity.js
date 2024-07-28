@@ -203,7 +203,7 @@ addLayer("v", {
             requirementDescription: "e1.000e20 velocities",
             effectDescription: "Velocity and Energy doesn't reset anything.",
             done() { return player.v.points.gte(new Decimal("ee20")) || hasMilestone('u', 0) },
-            unlocked() {return hasUpgrade('sf', 53) || hasMilestone('u', 0)}
+            unlocked() {return hasUpgrade('sf', 53)}
         },
     },
 

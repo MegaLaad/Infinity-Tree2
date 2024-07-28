@@ -112,38 +112,38 @@ addLayer("u", {
         0: {
             requirementDescription: "1 velocity",
             effectDescription: "Get all velocity milestones and keep them on reset, and unlock auto-velocity early.",
-            done() { return player.v.points.gte(1) },
-            unlocked() {return unlocked}
+            done() { return player.v.points.gte(1) && player.u.points.add(player.u.buyableSpent).gte(1) },
+            unlocked() {return player.u.points.add(player.u.buyableSpent).gte(1)}
         },
         1: {
             requirementDescription: "1 black hole",
             effectDescription: "Get all black hole milestones and keep them on reset, and unlock auto-velocity early.",
-            done() { return player.bl.points.gte(1) },
-            unlocked() {return unlocked}
+            done() { return player.bl.points.gte(1) && player.u.points.add(player.u.buyableSpent).gte(1) },
+            unlocked() {return player.u.points.add(player.u.buyableSpent).gte(1)}
         },
         2: {
             requirementDescription: "1 star fragment",
             effectDescription: "Get all star fragment milestones, make all non-missing upgrades affordable and keep them on reset.",
-            done() { return player.sf.points.gte(1) },
-            unlocked() {return unlocked}
+            done() { return player.sf.points.gte(1) && player.u.points.add(player.u.buyableSpent).gte(1) },
+            unlocked() {return player.u.points.add(player.u.buyableSpent).gte(1)}
         },
         3: {
             requirementDescription: "1 electron",
             effectDescription: "Get all generators milestones and keep them on reset.",
-            done() { return player.g.electron.gte(1) },
-            unlocked() {return unlocked}
+            done() { return player.g.electron.gte(1) && player.u.points.add(player.u.buyableSpent).gte(1) },
+            unlocked() {return player.u.points.add(player.u.buyableSpent).gte(1)}
         },
         4: {
             requirementDescription: "1 space",
             effectDescription: "Get all space milestones and keep them on reset, and space boost is 100x better",
-            done() { return player.sf.points.gte(1) },
-            unlocked() {return unlocked}
+            done() { return player.sf.points.gte(1) && player.u.points.add(player.u.buyableSpent).gte(1) },
+            unlocked() {return player.u.points.add(player.u.buyableSpent).gte(1)}
         },
         5: {
             requirementDescription: "1e100 relativity gain",
             effectDescription: "Gain relativity depending on relativity gain.",
-            done() { return player.d.relativityGain.gte(1e100) },
-            unlocked() {return unlocked}
+            done() { return player.d.relativityGain.gte(1e100) && player.u.points.add(player.u.buyableSpent).gte(1) },
+            unlocked() {return player.u.points.add(player.u.buyableSpent).gte(1)}
         },
     },
 
