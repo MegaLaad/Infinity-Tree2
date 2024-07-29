@@ -8,6 +8,7 @@ addLayer("si", {
         layer: new Decimal(0),
         layerGain: new Decimal(0),
         eternity: new Decimal(0),
+        pseudoUpgs: [],
     }},
     color: "#F8E165",
     nodeStyle() {return {
@@ -315,6 +316,18 @@ addLayer("si", {
             },
             canAfford() {
                 return player.si.eternity.gte(new Decimal("200"))
+            },
+            pay() {
+                return null
+            },
+            unlocked() {return hasMilestone('si', 0) && (player.si.layer.gte(new Decimal("1.79e308")) || player.si.eternity.gte(1))}
+        },
+        42: {
+            fullDisplay() {
+                return "<b>Eternal Universe</b><br>You gain free levels for universe buyables depending on eternity.<br><br>Requirement: 500.00 eternity & 15,000 total dark matter"
+            },
+            canAfford() {
+                return player.si.eternity.gte(new Decimal("500")) && player.dm.points.add(player.dm.buyableSpent).gte(new Decimal("15000"))
             },
             pay() {
                 return null

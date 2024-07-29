@@ -8,7 +8,7 @@ let modInfo = {
 		"_3velocity.js", "_3blackHole.js", "_3energy.js", 
 		"_4spaceFragment.js", "_4generator.js", "_4space.js", "_4dilation.js",
 		"_5universe.js", 
-		"_6simulation.js", "_6darkMatter.js", "_6tmp.js",
+		"_6simulation.js", "_6darkMatter.js", "_6deterioration.js",
 		"tree.js", "!achievement.js"],
 
 	discordName: "",

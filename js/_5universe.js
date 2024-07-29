@@ -30,42 +30,47 @@ addLayer("u", {
         return "with "+format(player.u.points.add(player.u.buyableSpent))+" universes total."
     },
     getResetGain(canMax) {
-        gain = Decimal.floor(Decimal.ln(Decimal.log10(player.s.points.add(10)).add(26)).div(Decimal.ln(26))).sub(player.u.points).sub(player.u.buyableSpent)
         if (hasMilestone('si', 1)) {
-            gain = Decimal.floor(Decimal.ln(Decimal.log10(player.s.points.add(10)).add(20)).div(Decimal.ln(20))).sub(player.u.points).sub(player.u.buyableSpent)
             if (hasUpgrade('si', 13)) {
-                gain = Decimal.floor(Decimal.ln(Decimal.log10(player.s.points.add(10)).times(Decimal.log2(player.si.layer.add(2))).add(20)).div(Decimal.ln(20))).sub(player.u.points).sub(player.u.buyableSpent)
                 if (hasUpgrade('si', 33)) {
-                    gain = Decimal.floor(Decimal.ln(Decimal.log10(player.s.points.add(10)).times(Decimal.log2(player.si.layer.add(2))).add(20).times(player.si.eternity.pow(2))).div(Decimal.ln(20))).sub(player.u.points).sub(player.u.buyableSpent)
+                    gain = Decimal.floor(Decimal.ln(Decimal.log10(player.s.points.add(10)).times(Decimal.log2(player.si.layer.add(2))).times(player.si.eternity.pow(2)).add(20)).div(Decimal.ln(20))).sub(player.u.points).sub(player.u.buyableSpent)
+                } else {
+                    gain = Decimal.floor(Decimal.ln(Decimal.log10(player.s.points.add(10)).times(Decimal.log2(player.si.layer.add(2))).add(20)).div(Decimal.ln(20))).sub(player.u.points).sub(player.u.buyableSpent)
                 }
+            } else {
+                gain = Decimal.floor(Decimal.ln(Decimal.log10(player.s.points.add(10)).add(20)).div(Decimal.ln(20))).sub(player.u.points).sub(player.u.buyableSpent)
             }
-        } 
-        if (!isNaN(gain) && gain.gte(1) && player.s.points.gte(1e26)) {
-            if (canMax) return gain
-            else return decimalOne
+        } else {
+            gain = Decimal.floor(Decimal.ln(Decimal.log10(player.s.points.add(10)).add(26)).div(Decimal.ln(26))).sub(player.u.points).sub(player.u.buyableSpent)
         }
+        if (!isNaN(gain) && gain.gte(1) && player.s.points.gte(1e26)) return gain.max(1)
         else return decimalZero
     },
     getNextAt(canMax) {
         resetGain = getResetGain(this.layer).add(1).min(1)
         if (canMax) resetGain = getResetGain(this.layer).add(1)
-        nextAt = Decimal.pow(10, Decimal.pow(26, resetGain.add(player.u.points).add(player.u.buyableSpent)))
+        
         if (hasMilestone('si', 1)) {
-            nextAt = Decimal.pow(10, Decimal.pow(20, resetGain.add(player.u.points).add(player.u.buyableSpent)))
             if (hasUpgrade('si', 13)) {
-                nextAt = Decimal.pow(10, Decimal.pow(20, resetGain.add(player.u.points).add(player.u.buyableSpent)).div(Decimal.log2(player.si.layer)))
                 if (hasUpgrade('si', 33)) {
-                    nextAt = Decimal.pow(10, Decimal.pow(20, resetGain.add(player.u.points).add(player.u.buyableSpent)).div(Decimal.log2(player.si.layer)).div(player.si.eternity.pow(2)))
+                    nextAt = Decimal.pow(10, Decimal.pow(20, resetGain.add(player.u.points).add(player.u.buyableSpent)).div(Decimal.log2(player.si.layer.add(2))).div(player.si.eternity.pow(2)))
+                } else {
+                    nextAt = Decimal.pow(10, Decimal.pow(20, resetGain.add(player.u.points).add(player.u.buyableSpent)).div(Decimal.log2(player.si.layer.add(2))))
                 }
+            } else {
+                nextAt = Decimal.pow(10, Decimal.pow(20, resetGain.add(player.u.points).add(player.u.buyableSpent)))
             }
-        } 
+        } else {
+            nextAt = Decimal.pow(10, Decimal.pow(26, resetGain.add(player.u.points).add(player.u.buyableSpent)))
+        }
         return nextAt
     },
     canReset() {
         return getResetGain(this.layer).gte(1)
     },
     prestigeButtonText() {
-        return "Sacrifise your space to gain "+format(getResetGain(this.layer))+" universe<br><br>Next: "+format(player.s.points)+" / "+format(getNextAt(this.layer))+" space"
+        if (player.u.points.add(player.u.buyableSpent).gte(10) || player.dm.total.gte(1) || hasUpgrade('si', 34)) return "Sacrifise your space to gain "+format(getResetGain(this.layer))+" universe<br><br>Current Space: "+format(player.s.points)
+        else return "Sacrifise your space to gain "+format(getResetGain(this.layer))+" universe<br><br>Next: "+format(player.s.points)+" / "+format(getNextAt(this.layer))+" space"
     },
     row: 4, // Row the layer is in on the tree (0 is the first row)
     layerShown(){return true},
@@ -82,6 +87,9 @@ addLayer("u", {
             lvlTmp = new Decimal(2)
             if (hasUpgrade('si', 41)) {
                 lvlTmp = Decimal.log10(player.si.layer.add(10)).add(2)
+                if (hasUpgrade('si', 41)) {
+                    lvlTmp = player.si.eternity.add(Decimal.log10(player.si.layer.add(10))).add(2)
+                }
             }
         }  
         player.u.freeLevel = lvlTmp
@@ -337,5 +345,4 @@ addLayer("u", {
     ],
 
     autoPrestige() { return (player.u.auto && hasMilestone("si", 4)) },
-    canBuyMax() {return false},
 })
