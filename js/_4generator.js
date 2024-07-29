@@ -24,8 +24,8 @@ addLayer("g", {
         else return "which are boosting number double exponent gain by ^"+format(Decimal.log10(player.g.points.add(10)).times(2))+"."
     },
     getResetGain() {
-        mult = Decimal.pow(10, getBuyableAmount('u', 22).times(2).pow(3))
-        exp = Decimal.pow(1.1, getBuyableAmount('u', 22))
+        mult = Decimal.pow(10, getBuyableAmount('u', 22).add(player.u.freeLevel).times(2).pow(3))
+        exp = Decimal.pow(1.1, getBuyableAmount('u', 22).add(player.u.freeLevel))
         if (hasMilestone('g', 1)) {
             if (hasMilestone('g', 2)) {
                 if (hasMilestone('g', 6)) {
@@ -226,7 +226,7 @@ addLayer("g", {
         },
         12: {
             fullDisplay() {
-                return "<b>Synergy Energy</b><br>Increase Generator gain by Generator.<br><br>Cost: 30 quarks"
+                return "<b>Synergy Energy</b><br>Increase Generator gain by Generator. (Hardcap at ee16)<br><br>Cost: 30 quarks"
             },
             canAfford() {
                 return player.g.quarks >= 30

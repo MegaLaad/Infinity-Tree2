@@ -1,5 +1,4 @@
 unlocked = false
-freeLevel = 0
 
 addLayer("u", {
     name: "universe", // This is optional, only used in a few places, If absent it just uses the layer id.
@@ -9,10 +8,17 @@ addLayer("u", {
         unlocked: false,
 		points: new Decimal(0),
         buyableSpent: new Decimal(0),
+        freeLevel: new Decimal(0),
+        buyableCost() {
+            cost = decimalOne
+            if (hasUpgrade('si', 22)) cost = cost.div(4)
+            if (hasUpgrade('si', 24)) cost = cost.div(Decimal.min(10, Decimal.floor(Decimal.pow(2, Decimal.log10(player.si.points.div(1e5).add(10))))))
+            return cost
+        },
     }},
     color: "#534FE7",
     nodeStyle() {return {
-        "background": (player.si.unlocked)?"radial-gradient(#0000FF, #A020F0)":"#bf8f8f" ,
+        "background": (player.u.unlocked || player.s.points.gte(1e26))?"radial-gradient(#0000FF, #A020F0)":"#bf8f8f" ,
     }},
     branches: ['sf', 's', 'd', 'g'],
     requires: new Decimal(1e26),
@@ -29,6 +35,9 @@ addLayer("u", {
             gain = Decimal.floor(Decimal.ln(Decimal.log10(player.s.points.add(10)).add(20)).div(Decimal.ln(20))).sub(player.u.points).sub(player.u.buyableSpent)
             if (hasUpgrade('si', 13)) {
                 gain = Decimal.floor(Decimal.ln(Decimal.log10(player.s.points.add(10)).times(Decimal.log2(player.si.layer.add(2))).add(20)).div(Decimal.ln(20))).sub(player.u.points).sub(player.u.buyableSpent)
+                if (hasUpgrade('si', 33)) {
+                    gain = Decimal.floor(Decimal.ln(Decimal.log10(player.s.points.add(10)).times(Decimal.log2(player.si.layer.add(2))).add(20).times(player.si.eternity.pow(2))).div(Decimal.ln(20))).sub(player.u.points).sub(player.u.buyableSpent)
+                }
             }
         } 
         if (!isNaN(gain) && gain.gte(1) && player.s.points.gte(1e26)) {
@@ -45,6 +54,9 @@ addLayer("u", {
             nextAt = Decimal.pow(10, Decimal.pow(20, resetGain.add(player.u.points).add(player.u.buyableSpent)))
             if (hasUpgrade('si', 13)) {
                 nextAt = Decimal.pow(10, Decimal.pow(20, resetGain.add(player.u.points).add(player.u.buyableSpent)).div(Decimal.log2(player.si.layer)))
+                if (hasUpgrade('si', 33)) {
+                    nextAt = Decimal.pow(10, Decimal.pow(20, resetGain.add(player.u.points).add(player.u.buyableSpent)).div(Decimal.log2(player.si.layer)).div(player.si.eternity.pow(2)))
+                }
             }
         } 
         return nextAt
@@ -53,8 +65,7 @@ addLayer("u", {
         return getResetGain(this.layer).gte(1)
     },
     prestigeButtonText() {
-        if (!getResetGain(this.layer).gte(100)) return "Sacrifise your space to gain "+format(getResetGain(this.layer))+" universe<br><br>Next: "+format(player.s.points)+" / "+format(getNextAt(this.layer))+" space"
-        else return "Sacrifise your space to gain "+format(getResetGain(this.layer))+" universe"
+        return "Sacrifise your space to gain "+format(getResetGain(this.layer))+" universe<br><br>Next: "+format(player.s.points)+" / "+format(getNextAt(this.layer))+" space"
     },
     row: 4, // Row the layer is in on the tree (0 is the first row)
     layerShown(){return true},
@@ -64,18 +75,36 @@ addLayer("u", {
             unlocked = true
         }
 
-        if (hasUpgrade('si', 21)) freeLevel = new Decimal(2)
+        if (hasUpgrade('si', 32) && !player.u.points.add(player.u.buyableSpent).gte(6)) player.u.points = new Decimal(6).sub(player.u.buyableSpent)
+
+        lvlTmp = decimalZero
+        if (hasUpgrade('si', 21)) {
+            lvlTmp = new Decimal(2)
+            if (hasUpgrade('si', 41)) {
+                lvlTmp = Decimal.log10(player.si.layer.add(10)).add(2)
+            }
+        }  
+        player.u.freeLevel = lvlTmp
+    },
+
+    automation() {
+        if (player.u.points.gte(player.u.buyableCost())) {
+            player.u.points = player.u.points.sub(player.u.buyableCost())
+            player.u.buyableSpent = player.u.buyableSpent.add(player.u.buyableCost())
+            if (!getBuyableAmount('u', 11).gte(750)) setBuyableAmount('u', 11, getBuyableAmount('u', 11).add(1))
+            if (!getBuyableAmount('u', 12).gte(750)) setBuyableAmount('u', 12, getBuyableAmount('u', 11).add(1))
+            if (!getBuyableAmount('u', 13).gte(750)) setBuyableAmount('u', 13, getBuyableAmount('u', 11).add(1))
+            if (!getBuyableAmount('u', 21).gte(750)) setBuyableAmount('u', 21, getBuyableAmount('u', 11).add(1))
+            if (!getBuyableAmount('u', 22).gte(750)) setBuyableAmount('u', 22, getBuyableAmount('u', 11).add(1))
+        }
     },
 
     doReset(resettingLayer) {
 		let keep = ["milestones"];
         if (hasMilestone('si', 2)) keep.push("upgrades");
-		if (layers[resettingLayer].row > this.row) layerDataReset(this.layer, keep);
-        setBuyableAmount(this.layer, 11, new Decimal(freeLevel))
-        setBuyableAmount(this.layer, 12, new Decimal(freeLevel))
-        setBuyableAmount(this.layer, 13, new Decimal(freeLevel))
-        setBuyableAmount(this.layer, 21, new Decimal(freeLevel))
-        setBuyableAmount(this.layer, 22, new Decimal(freeLevel))
+		if (layers[resettingLayer].row > this.row) {
+            layerDataReset(this.layer, keep);
+        }
 	},
  
     tabFormat: {
@@ -101,6 +130,9 @@ addLayer("u", {
                 "main-display",
                 ["display-text",
                     function() { return '<b>Alternative Universes</b>' }, {"font-size": "32px", "color": "#534FE7"}
+                ],
+                ["display-text",
+                    function() { return 'The \'Sell All\' button buys max of that buyable.' }
                 ], "blank",
                 "buyables", "blank",
                 "upgrades",
@@ -152,75 +184,115 @@ addLayer("u", {
         respec() { // Optional, reset things and give back your currency. Having this function makes a respec button appear
             player.u.points = player.u.points.add(player.u.buyableSpent)
             player.u.buyableSpent = new Decimal(0)
-            setBuyableAmount(this.layer, 11, new Decimal(freeLevel))
-            setBuyableAmount(this.layer, 12, new Decimal(freeLevel))
-            setBuyableAmount(this.layer, 13, new Decimal(freeLevel))
-            setBuyableAmount(this.layer, 21, new Decimal(freeLevel))
-            setBuyableAmount(this.layer, 22, new Decimal(freeLevel))
+            setBuyableAmount('u', 11, decimalZero)
+            setBuyableAmount('u', 12, decimalZero)
+            setBuyableAmount('u', 13, decimalZero)
+            setBuyableAmount('u', 21, decimalZero)
+            setBuyableAmount('u', 22, decimalZero)
         },
         respecMessage: "Are you sure you want to respec?",
         11: {
-            cost(x) { return decimalOne },
+            cost(x) { return player.u.buyableCost() },
             title: "The Reality",
-            display() { return "<b>[NUMBER BOOSTER]</b><br><br>Multiply gain and exponent exponential gain by "+format(Decimal.pow(10, getBuyableAmount(this.layer, this.id).pow(1.5)))+", and exponent double exponential gain by "+format(Decimal.pow(2, getBuyableAmount(this.layer, this.id)))+".<br><br>Cost: "+format(player.u.points)+" / "+format(this.cost(getBuyableAmount(this.layer, this.id)))+" universe<br>Bought: "+Decimal.floor(format(getBuyableAmount(this.layer, this.id))) },
+            display() { return "<b>[NUMBER BOOSTER]</b><br><br>Multiply gain and exponent exponential gain by "+format(Decimal.pow(10, getBuyableAmount(this.layer, this.id).pow(1.5)))+", and exponent double exponential gain by "+format(Decimal.pow(2, getBuyableAmount(this.layer, this.id)))+".<br><br>Cost: "+format(player.u.points)+" / "+format(this.cost(getBuyableAmount(this.layer, this.id)))+" universe<br>Bought: "+Decimal.floor(format(getBuyableAmount(this.layer, this.id)))+"/750 (+"+format(player.u.freeLevel)+")" },
             canAfford() { return player.u.points.gte(this.cost()) },
             buy() {
-                player.u.points = player.u.points.sub(1)
-                player.u.buyableSpent = player.u.buyableSpent.add(1)
+                player.u.points = player.u.points.sub(player.u.buyableCost())
+                player.u.buyableSpent = player.u.buyableSpent.add(player.u.buyableCost())
                 setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
             },
             style: {"background": function() { return "radial-gradient(#4BDC13, #534FE7)"}},
+            sellAll() {
+                while (player.u.points.gte(player.u.buyableCost())) {
+                    player.u.points = player.u.points.sub(player.u.buyableCost())
+                    player.u.buyableSpent = player.u.buyableSpent.add(player.u.buyableCost())
+                    setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+                }
+            },
+            purchaseLimit: 750,
         },
         12: {
-            cost(x) { return decimalOne },
+            cost(x) { return player.u.buyableCost() },
             title: "Distant Universe",
-            display() { return "<b>[INFINITY BOOSTER]</b><br><br>Multiply gain by "+format(Decimal.pow(10, getBuyableAmount(this.layer, this.id).times(2).pow(3)))+", exponent gain by "+format(Decimal.pow(1.2, getBuyableAmount(this.layer, this.id)))+", and exponent time gain by "+format(Decimal.pow(2, getBuyableAmount(this.layer, this.id)))+".<br><br>Cost: "+format(player.u.points)+" / "+format(this.cost(getBuyableAmount(this.layer, this.id)))+" universe<br>Bought: "+Decimal.floor(format(getBuyableAmount(this.layer, this.id))) },
+            display() { return "<b>[INFINITY BOOSTER]</b><br><br>Multiply gain by "+format(Decimal.pow(10, getBuyableAmount(this.layer, this.id).times(2).pow(3)))+", exponent gain by "+format(Decimal.pow(1.2, getBuyableAmount(this.layer, this.id)))+", and exponent time gain by "+format(Decimal.pow(2, getBuyableAmount(this.layer, this.id)))+".<br><br>Cost: "+format(player.u.points)+" / "+format(this.cost(getBuyableAmount(this.layer, this.id)))+" universe<br>Bought: "+Decimal.floor(format(getBuyableAmount(this.layer, this.id)))+"/750 (+"+format(player.u.freeLevel)+")" },
             canAfford() { return player.u.points.gte(this.cost()) },
             buy() {
-                player.u.points = player.u.points.sub(1)
-                player.u.buyableSpent = player.u.buyableSpent.add(1)
+                player.u.points = player.u.points.sub(player.u.buyableCost())
+                player.u.buyableSpent = player.u.buyableSpent.add(player.u.buyableCost())
                 setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
             },
             style: {"background": function() { return "radial-gradient(#FF00FF, #534FE7)"}},
+            sellAll() {
+                while (player.u.points.gte(player.u.buyableCost())) {
+                    player.u.points = player.u.points.sub(player.u.buyableCost())
+                    player.u.buyableSpent = player.u.buyableSpent.add(player.u.buyableCost())
+                    setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+                }
+            },
+            purchaseLimit: 750,
         },
         13: {
-            cost(x) { return decimalOne },
+            cost(x) { return player.u.buyableCost() },
             title: "Mutation Universe",
-            display() { return "<b>[VELOCITY BOOSTER]</b><br><br>Multiply gain by "+format(Decimal.pow(10, getBuyableAmount(this.layer, this.id).times(2).pow(3)))+", exponent gain by "+format(Decimal.pow(1.2, getBuyableAmount(this.layer, this.id)))+", and exponent double exponential gain by "+format(Decimal.pow(10, getBuyableAmount(this.layer, this.id)))+".<br><br>Cost: "+format(player.u.points)+" / "+format(this.cost(getBuyableAmount(this.layer, this.id)))+" universe<br>Bought: "+Decimal.floor(format(getBuyableAmount(this.layer, this.id))) },
+            display() { return "<b>[VELOCITY BOOSTER]</b><br><br>Multiply gain by "+format(Decimal.pow(10, getBuyableAmount(this.layer, this.id).times(2).pow(3)))+", exponent gain by "+format(Decimal.pow(1.2, getBuyableAmount(this.layer, this.id)))+", and exponent double exponential gain by "+format(Decimal.pow(10, getBuyableAmount(this.layer, this.id)))+".<br><br>Cost: "+format(player.u.points)+" / "+format(this.cost(getBuyableAmount(this.layer, this.id)))+" universe<br>Bought: "+Decimal.floor(format(getBuyableAmount(this.layer, this.id)))+"/750 (+"+format(player.u.freeLevel)+")" },
             canAfford() { return player.u.points.gte(this.cost()) },
             buy() {
-                player.u.points = player.u.points.sub(1)
-                player.u.buyableSpent = player.u.buyableSpent.add(1)
+                player.u.points = player.u.points.sub(player.u.buyableCost())
+                player.u.buyableSpent = player.u.buyableSpent.add(player.u.buyableCost())
                 setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
             },
             unlocked() {return hasUpgrade('u', 11)},
             style: {"background": function() { return "radial-gradient(#BBBB00, #534FE7)"}},
+            sellAll() {
+                while (player.u.points.gte(player.u.buyableCost())) {
+                    player.u.points = player.u.points.sub(player.u.buyableCost())
+                    player.u.buyableSpent = player.u.buyableSpent.add(player.u.buyableCost())
+                    setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+                }
+            },
+            purchaseLimit: 750,
         },
         21: {
-            cost(x) { return decimalOne },
+            cost(x) { return player.u.buyableCost() },
             title: "Fragmentation Universe",
-            display() { return "<b>[STAR FRAGMENT BOOSTER]</b><br><br>Multiply gain by "+format(Decimal.pow(10, getBuyableAmount(this.layer, this.id).times(2).pow(3)))+", exponent gain by "+format(Decimal.pow(1.1, getBuyableAmount(this.layer, this.id)))+".<br><br>Cost: "+format(player.u.points)+" / "+format(this.cost(getBuyableAmount(this.layer, this.id)))+" universe<br>Bought: "+Decimal.floor(format(getBuyableAmount(this.layer, this.id))) },
+            display() { return "<b>[STAR FRAGMENT BOOSTER]</b><br><br>Multiply gain by "+format(Decimal.pow(10, getBuyableAmount(this.layer, this.id).times(2).pow(3)))+", exponent gain by "+format(Decimal.pow(1.1, getBuyableAmount(this.layer, this.id)))+".<br><br>Cost: "+format(player.u.points)+" / "+format(this.cost(getBuyableAmount(this.layer, this.id)))+" universe<br>Bought: "+Decimal.floor(format(getBuyableAmount(this.layer, this.id)))+"/750 (+"+format(player.u.freeLevel)+")" },
             canAfford() { return player.u.points.gte(this.cost()) },
             buy() {
-                player.u.points = player.u.points.sub(1)
-                player.u.buyableSpent = player.u.buyableSpent.add(1)
+                player.u.points = player.u.points.sub(player.u.buyableCost())
+                player.u.buyableSpent = player.u.buyableSpent.add(player.u.buyableCost())
                 setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
             },
             unlocked() {return hasUpgrade('u', 12)},
             style: {"background": function() { return "radial-gradient(#419292, #534FE7)"}},
+            sellAll() {
+                while (player.u.points.gte(player.u.buyableCost())) {
+                    player.u.points = player.u.points.sub(player.u.buyableCost())
+                    player.u.buyableSpent = player.u.buyableSpent.add(player.u.buyableCost())
+                    setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+                }
+            },
+            purchaseLimit: 750,
         },
         22: {
-            cost(x) { return decimalOne },
+            cost(x) { return player.u.buyableCost() },
             title: "Production Universe",
-            display() { return "<b>[GENERATOR BOOSTER]</b><br><br>Multiply gain by "+format(Decimal.pow(10, getBuyableAmount(this.layer, this.id).times(2).pow(3)))+", exponent gain by "+format(Decimal.pow(1.1, getBuyableAmount(this.layer, this.id)))+".<br><br>Cost: "+format(player.u.points)+" / "+format(this.cost(getBuyableAmount(this.layer, this.id)))+" universe<br>Bought: "+Decimal.floor(format(getBuyableAmount(this.layer, this.id))) },
+            display() { return "<b>[GENERATOR BOOSTER]</b><br><br>Multiply gain by "+format(Decimal.pow(10, getBuyableAmount(this.layer, this.id).times(2).pow(3)))+", exponent gain by "+format(Decimal.pow(1.1, getBuyableAmount(this.layer, this.id)))+".<br><br>Cost: "+format(player.u.points)+" / "+format(this.cost(getBuyableAmount(this.layer, this.id)))+" universe<br>Bought: "+Decimal.floor(format(getBuyableAmount(this.layer, this.id)))+"/750 (+"+format(player.u.freeLevel)+")" },
             canAfford() { return player.u.points.gte(this.cost()) },
             buy() {
-                player.u.points = player.u.points.sub(1)
-                player.u.buyableSpent = player.u.buyableSpent.add(1)
+                player.u.points = player.u.points.sub(player.u.buyableCost())
+                player.u.buyableSpent = player.u.buyableSpent.add(player.u.buyableCost())
                 setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
             },
             unlocked() {return hasUpgrade('u', 13)},
             style: {"background": function() { return "radial-gradient(#DD3652, #534FE7)"}},
+            sellAll() {
+                while (player.u.points.gte(player.u.buyableCost())) {
+                    player.u.points = player.u.points.sub(player.u.buyableCost())
+                    player.u.buyableSpent = player.u.buyableSpent.add(player.u.buyableCost())
+                    setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+                }
+            },
+            purchaseLimit: 750,
         },
     },
 
@@ -265,4 +337,5 @@ addLayer("u", {
     ],
 
     autoPrestige() { return (player.u.auto && hasMilestone("si", 4)) },
+    canBuyMax() {return false},
 })

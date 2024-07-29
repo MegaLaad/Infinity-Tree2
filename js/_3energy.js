@@ -175,3 +175,4 @@ addLayer("e", {
     autoPrestige() { return (player.e.auto && hasUpgrade('sf', 41) && hasUpgrade('sf', 42) && hasUpgrade('sf', 43) && hasUpgrade('sf', 44) && hasUpgrade('sf', 45)) },
     resetsNothing() { return hasMilestone("v", 5) },
 })
+

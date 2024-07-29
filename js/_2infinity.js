@@ -27,14 +27,14 @@ addLayer("i", {
         if (hasUpgrade('sf', 43)) mult = mult.times("1e2000")
         if (hasUpgrade('i', 31)) mult = mult.times(upgradeEffect('i', 31))
         if (player.v.pointsTest > 0) mult = mult.times(Decimal.min((Decimal.pow(10, Decimal.pow(1.1, player.v.points))).add(1), 100000))
-        mult = mult.times(Decimal.pow(10, getBuyableAmount('u', 12).times(2).pow(3)))
+        mult = mult.times(Decimal.pow(10, getBuyableAmount('u', 12).add(player.u.freeLevel).times(2).pow(3)))
         if (inChallenge('bl', 12) || player.d.dilating) mult = new Decimal(1)
         return mult
     },
 
     gainExp() { // Calculate the exponent on main currency from bonuses
         exp = new Decimal(1)
-        exp = exp.times(Decimal.pow(1.2, getBuyableAmount('u', 12)))
+        exp = exp.times(Decimal.pow(1.2, getBuyableAmount('u', 12).add(player.u.freeLevel)))
         return exp
     },
     row: 1, // Row the layer is in on the tree (0 is the first row)
@@ -70,7 +70,7 @@ addLayer("i", {
             if (hasUpgrade('bl', 11)) gain = gain.pow(Decimal.min(Decimal.log2(player.bl.points.add(2)), 10))
             if (hasUpgrade('sf', 34)) gain = gain.pow(1.2)
             if (hasUpgrade('sf', 53)) gain = gain.pow(10)
-            gain = gain.pow(Decimal.pow(2, getBuyableAmount('u', 12)))
+            gain = gain.pow(Decimal.pow(2, getBuyableAmount('u', 12).add(player.u.freeLevel)))
             if (hasUpgrade('i', 23)) player.i.time = player.i.time.add(gain)
         } else {
             gain = new Decimal(0);

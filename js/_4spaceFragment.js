@@ -39,8 +39,9 @@ addLayer("sf", {
     },
 
     getResetGain() {
-        mult = Decimal.pow(10, getBuyableAmount('u', 21).times(2).pow(3))
-        exp = Decimal.pow(1.1, getBuyableAmount('u', 21))
+        mult = Decimal.pow(10, getBuyableAmount('u', 21).add(player.u.freeLevel).times(2).pow(3))
+        exp = Decimal.pow(1.1, getBuyableAmount('u', 21).add(player.u.freeLevel))
+        exp = exp.times(player.dm.cationsEffect.div(player.dm.cationsNerf))
         if (player.v.points < 1e270) {
             return new Decimal(0)
         } else {

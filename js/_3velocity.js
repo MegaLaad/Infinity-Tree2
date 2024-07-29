@@ -21,8 +21,8 @@ addLayer("v", {
     baseAmount() { return player.i.time },  // A function to return the current amount of baseResource.
     type: "custom", // normal: cost to gain currency depends on amount gained. static: cost depends on how much you already have
     getResetGain() {
-        mult = Decimal.pow(10, getBuyableAmount('u', 13).times(2).pow(3))
-        exp = Decimal.pow(1.2, getBuyableAmount('u', 13))
+        mult = Decimal.pow(10, getBuyableAmount('u', 13).add(player.u.freeLevel).times(2).pow(3))
+        exp = Decimal.pow(1.2, getBuyableAmount('u', 13).add(player.u.freeLevel))
         if (hasUpgrade('v', 11)) {
             if (hasUpgrade('v', 12)) {
                 if (hasUpgrade('v', 21)) {
@@ -46,6 +46,8 @@ addLayer("v", {
         }
     },
     getNextAt() {
+        mult = Decimal.pow(10, getBuyableAmount('u', 13).add(player.u.freeLevel).times(2).pow(3))
+        exp = Decimal.pow(1.2, getBuyableAmount('u', 13).add(player.u.freeLevel))
         if (hasUpgrade('v', 11)) {
             if (hasUpgrade('v', 12)) {
                 if (hasUpgrade('v', 21)) {

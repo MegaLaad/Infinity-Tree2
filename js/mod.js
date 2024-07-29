@@ -8,7 +8,7 @@ let modInfo = {
 		"_3velocity.js", "_3blackHole.js", "_3energy.js", 
 		"_4spaceFragment.js", "_4generator.js", "_4space.js", "_4dilation.js",
 		"_5universe.js", 
-		"_6simulation.js",
+		"_6simulation.js", "_6darkMatter.js", "_6tmp.js",
 		"tree.js", "!achievement.js"],
 
 	discordName: "",
@@ -46,7 +46,7 @@ function getPointGen() {
 	if(!canGenPoints()) return new Decimal(0)
 
 	let gain = new Decimal(1)
-	gain = gain.times(Decimal.pow(10, getBuyableAmount('u', 11).pow(1.5)))
+	gain = gain.times(Decimal.pow(10, getBuyableAmount('u', 11).add(player.u.freeLevel).pow(1.5)))
 	return gain
 }
 

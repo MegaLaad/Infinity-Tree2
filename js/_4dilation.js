@@ -56,6 +56,7 @@ addLayer("d", {
             } else {
                 if (player.d.dilateSpent.gte(2)) gain = gain.pow(Decimal.log2(player.d.dilateSpent.add(1)))
             }
+            if (hasUpgrade('si', 23)) gain = gain.pow(Decimal.log10(player.si.layer.add(10)).pow(0.6))
         }
 
         if (isNaN(gain)) gain = decimalZero
@@ -192,7 +193,7 @@ addLayer("d", {
         },
         13: {
             fullDisplay() {
-                return "<b>Time Warp</b><br>You can spend more than 1 dilation on a time dilation, leading to more relativity gain. (Hardcap at ee16)<br><br>Cost: 400,000 relativity"
+                return "<b>Time Warp</b><br>You can spend more than 1 dilation on a time dilation, leading to more relativity gain.<br><br>Cost: 400,000 relativity"
             },
             canAfford() {
                 return player.d.relativity.gte(new Decimal("400,000"))
