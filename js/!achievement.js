@@ -13,7 +13,7 @@ addLayer("ach", {
 
     tabFormat: [
         ["display-text",
-            function() { return '<b>Achievements will show if their requirements are fullfilled at that time.<br><br>Total Achievements: 25</b>' }
+            function() { return '<b>Achievements will show if their requirements are fullfilled at that time.<br><br>Total Achievements: 29</b>' }
         ], "blank",
         "achievements"
     ],
@@ -114,8 +114,8 @@ addLayer("ach", {
             name: "Pull The Switch",
             tooltip: "Reach 1 Electricity",
             image: "images/122.png",
-            done() { return player.e.electricity.gte(1) },
-            unlocked() { return player.e.electricity.gte(1) },
+            done() { return player.e.electricity.add(player.e.buyableSpent).gte(1) },
+            unlocked() { return player.e.electricity.add(player.e.buyableSpent).gte(1) },
         },
         123: {
             name: "Conquer The Impossible",
@@ -205,10 +205,38 @@ addLayer("ach", {
         },
         141: {
             name: "5D Chess Moment",
-            tooltip: "Reach 1 Universe",
+            tooltip: "Reach 1 total Universe",
             image: "images/141.png",
-            done() { return player.u.points.gte(1) },
-            unlocked() { return player.u.points.gte(1) },
+            done() { return player.u.points.add(player.u.buyableSpent).gte(1) },
+            unlocked() { return player.u.points.add(player.u.buyableSpent).gte(1) },
+        },
+        142: {
+            name: "Your Life Is A Lie?",
+            tooltip: "Reach 100 Simulation",
+            image: "images/142.png",
+            done() { return player.si.points.gte(100) },
+            unlocked() { return player.si.points.gte(100) },
+        },
+        143: {
+            name: "That Lasted Forever",
+            tooltip: "Reach 1 Eternity",
+            image: "images/143.png",
+            done() { return player.si.eternity.gte(1) },
+            unlocked() { return player.si.eternity.gte(1) },
+        },
+        144: {
+            name: "It Dark Matters",
+            tooltip: "Reach 1 total Dark Matter",
+            image: "images/144.png",
+            done() { return player.dm.points.add(player.dm.buyableSpent).gte(1) },
+            unlocked() { return player.dm.points.add(player.dm.buyableSpent).gte(1) },
+        },
+        145: {
+            name: "What Happend To Space?",
+            tooltip: "Get the first deterioration milestone",
+            image: "images/145.png",
+            done() { return hasMilestone('de', 0) },
+            unlocked() { return hasMilestone('de', 0) },
         },
     },
 })
