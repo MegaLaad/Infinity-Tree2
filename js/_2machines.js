@@ -90,5 +90,5 @@ addLayer("m", {
 
     resetsNothing() { return hasUpgrade("m", 12) },
     autoPrestige() { return (player.m.auto && hasUpgrade("m", 13)) },
-    deactivated() {return inChallenge('bl', 11)}
+    deactivated() {return inChallenge('bl', 11) || player.de.ruining}
 })

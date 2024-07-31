@@ -19,12 +19,12 @@ let modInfo = {
 
 // Set your version in num and name
 let VERSION = {
-	num: "1.0.3",
+	num: "1.0.4",
 	name: "I am a name..",
 }
 
 let changelog = `<h1>Changelog:</h1><br>
-	I am a changelog.`
+	I am a changelog...`
 
 let winText = `YOU CHEATER`
 
@@ -45,8 +45,8 @@ function canGenPoints(){
 function getPointGen() {
 	if(!canGenPoints()) return new Decimal(0)
 
-	let gain = new Decimal(1)
-	gain = gain.times(Decimal.pow(10, getBuyableAmount('u', 11).add(player.u.freeLevel).pow(1.5)))
+	gain = Decimal.pow(10, getBuyableAmount('u', 11).add(player.u.freeLevel).pow(1.5))
+	if (gain.ln(1)) gain = new Decimal(1)
 	return gain
 }
 

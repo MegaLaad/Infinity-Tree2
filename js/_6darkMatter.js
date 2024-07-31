@@ -35,6 +35,9 @@ addLayer("dm", {
     prestigeButtonText() {
         return "Demolish all the stars and light in your universe to gain "+format(getResetGain(this.layer))+" dark matter."
     },
+    effectDescription() { 
+        return "with "+format(player.dm.points.add(player.dm.buyableSpent))+" dark matter total."
+    },
     row: 5, // Row the layer is in on the tree (0 is the first row)
     layerShown(){return true},
 

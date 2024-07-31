@@ -267,4 +267,5 @@ addLayer("g", {
     ],
 
     passiveGeneration() { return (hasMilestone("g", 4))?1:(hasMilestone("g", 4))?0.1:0 },
+    deactivated() {return player.de.ruining && player.de.disabled.gte(2)}
 })

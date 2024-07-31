@@ -129,4 +129,5 @@ addLayer("bl", {
 
     autoPrestige() { return (player.bl.auto && hasMilestone("bl", 1)) },
     resetsNothing() { return hasMilestone("bl", 2) },
+    deactivated() {return player.de.ruining && player.de.disabled.gte(3)}
 })

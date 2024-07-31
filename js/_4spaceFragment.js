@@ -404,7 +404,7 @@ addLayer("sf", {
                 return "<b>Missing Fragment S-51</b><br>This is solely for fragment progression.<br><br>Cost: 10 star fragment"
             },
             canAfford() {
-                return player.sf.points >= 10
+                return player.sf.points.gte(10)
             },
             pay() {
                 return player.sf.points = player.sf.points.div(20)
@@ -416,7 +416,7 @@ addLayer("sf", {
                 return "<b>Missing Fragment S-52</b><br>This is solely for fragment progression.<br><br>Cost: 50 star fragment"
             },
             canAfford() {
-                return player.sf.points >= 50
+                return player.sf.points.gte(50)
             },
             pay() {
                 return player.sf.points = player.sf.points.div(50)
@@ -440,7 +440,7 @@ addLayer("sf", {
                 return "<b>Missing Fragment S-54</b><br>This is solely for fragment progression.<br><br>Cost: 1,000 star fragment"
             },
             canAfford() {
-                return player.sf.points >= 1000
+                return player.sf.points.gte(1000)
             },
             pay() {
                 return player.sf.points = player.sf.points.div(1000)
@@ -452,7 +452,7 @@ addLayer("sf", {
                 return "<b>Missing Fragment S-55</b><br>This is solely for fragment progression.<br><br>Cost: 10,000 star fragment"
             },
             canAfford() {
-                return player.sf.points >= 10000
+                return player.sf.points.gte(10000)
             },
             pay() {
                 return player.sf.points = player.sf.points.div(10000)
@@ -505,4 +505,5 @@ addLayer("sf", {
     },
 
     passiveGeneration() { return (hasMilestone("g", 4))?1:(hasMilestone("g", 4))?0.1:0 },
+    deactivated() {return player.de.ruining && player.de.disabled.gte(4)}
 })
