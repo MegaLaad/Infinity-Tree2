@@ -47,16 +47,16 @@ addLayer("dm", {
 	},
 
     update() {
-        if (getBuyableAmount('dm', 11).gte(1)) player.dm.cationsEffect = Decimal.pow(100, getBuyableAmount('dm', 11))
+        if (getBuyableAmount('dm', 11).gte(1)) player.dm.cationsEffect = Decimal.pow(1000, getBuyableAmount('dm', 11))
         else player.dm.cationsEffect = decimalOne
 
         if (getBuyableAmount('dm', 12).gte(1)) {
             player.dm.cationsNerf = Decimal.pow(getBuyableAmount('dm', 12).add(1), 2)
-            if (hasMilestone('de', 0)) player.dm.cationsNerf = Decimal.pow(100, getBuyableAmount('dm', 12).pow(2).add(1))
+            if (hasMilestone('de', 0)) player.dm.cationsNerf = Decimal.pow(10, getBuyableAmount('dm', 12).pow(2).add(1))
         }
         else player.dm.cationsNerf = decimalOne
 
-        if (getBuyableAmount('dm', 12).gte(1)) player.dm.anionsEffect = Decimal.pow(5, getBuyableAmount('dm', 12))
+        if (getBuyableAmount('dm', 12).gte(1)) player.dm.anionsEffect = Decimal.pow(50, getBuyableAmount('dm', 12))
         else player.dm.anionsEffect = decimalOne
 
         if (getBuyableAmount('dm', 11).gte(1)) player.dm.anionsNerf = Decimal.pow(getBuyableAmount('dm', 11).add(1), 1.5)
